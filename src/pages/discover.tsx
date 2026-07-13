@@ -4,7 +4,7 @@ import type { Book } from "../types";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { getMyCollections, addBookToCollection } from "../services/collections";
-
+type CollectionRow = { id: string; name: string };
 export default function Discover() {
     const [query, setQuery] = useState("");
     const [books, setBooks] = useState<Book[]>([]);
@@ -27,7 +27,7 @@ export default function Discover() {
     }
 
     const { user } = useAuth();
-    const [collections, setCollections] = useState<any[]>([]);
+    const [collections, setCollections] = useState<CollectionRow[]>([]);
 
     useEffect(() => {
         if (user) getMyCollections().then(setCollections).catch(console.error);
