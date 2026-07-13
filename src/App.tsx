@@ -4,6 +4,7 @@ import Collections from "./pages/collections";
 import BookDetail from "./pages/bookDetail";
 import Discover from "./pages/discover";
 import Community from "./pages/community";
+import Login from "./pages/login";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Link to="/collections">Collections</Link>
         <Link to="/discover">Discover</Link>
         <Link to="/community">Community</Link>
+        <Link to="/login">Login</Link>
       </nav>
 
       <main style={{ padding: "1rem" }}>
@@ -22,6 +24,7 @@ export default function App() {
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </main>
     </div>
