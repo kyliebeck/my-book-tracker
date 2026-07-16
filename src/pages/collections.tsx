@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { getMyCollections, createCollection, deleteCollection } from "../services/collections";
+import { getMyCollections, createCollection, } from "../services/collections";
 import type { Collection } from "../types";
+import '../styles/collections.css';
+import { Link } from "react-router-dom";
 
 export default function Collections() {
     const { user, loading: authLoading } = useAuth();
@@ -58,40 +60,41 @@ export default function Collections() {
         }
     }
 
-    async function handleDelete(id: string) {
-        await deleteCollection(id);
-        load();
-    }
 
     if (authLoading) return <p>Loading...</p>;
     if (!user) return <p>Please log in to see your collections.</p>;
 
     return (
-        <div>
-            <h1>My Collections</h1>
+        <main>
+            <div className="collections-container">
+                <h1>My Collections</h1>
 
-            <form onSubmit={handleCreate}>
-                <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="New collection name"
-                />
-                <button type="submit">Create</button>
-            </form>
+                <form className="collection-form"
+                    onSubmit={handleCreate}>
+                    <input
+                        className="collection-input"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="New collection name"
+                    />
+                    <button type="submit">Create</button>
+                </form>
 
-            {loading && <p>Loading...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
+                {loading && <p>Loading...</p>}
+                {error && <p style={{ color: "red" }}>{error}</p>}
 
-            <ul>
-                {collections.map((c) => (
-                    <li key={c.id}>
-                        {c.name}
-                        <button onClick={() => handleDelete(c.id)} style={{ marginLeft: "1rem" }}>
-                            Delete
-                        </button>
-                    </li>
-                ))}
-            </ul>
-        </div>
+                <ul className="collection-list">
+                    {collections.map((c) => (
+                        <li 
+                        className="collection-item"
+                            key={c.id}>
+                            <Link to={`/collections/${c.id}`}>
+                                {c.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </main>
     );
 }

@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/home";
 import Collections from "./pages/collections";
+import CollectionDetail from "./pages/collectionDetail";
 import BookDetail from "./pages/bookDetail";
 import Discover from "./pages/discover";
 import Community from "./pages/community";
@@ -21,6 +22,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/collections" element={<Collections />} />
+          <Route path="/collections/:id" element={<CollectionDetail />} />
           <Route path="/books/:id" element={<BookDetail />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/community" element={<Community />} />
