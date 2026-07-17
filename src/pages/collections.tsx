@@ -10,6 +10,7 @@ export default function Collections() {
     const { user, loading: authLoading } = useAuth();
     const [collections, setCollections] = useState<Collection[]>([]);
     const [name, setName] = useState("");
+    const [isPublic, setIsPublic] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -52,8 +53,9 @@ export default function Collections() {
         e.preventDefault();
         if (!name.trim() || !user) return;
         try {
-            await createCollection(name, user.id);
+            await createCollection(name, user.id, undefined, isPublic);
             setName("");
+            setIsPublic(false);
             load();
         } catch (err) {
             console.error(err);
@@ -78,6 +80,14 @@ export default function Collections() {
                         onChange={(e) => setName(e.target.value)}
                         placeholder="New collection name"
                     />
+                    <label className="collection-public-toggle">
+                        <input
+                            type="checkbox"
+                            checked={isPublic}
+                            onChange={(e) => setIsPublic(e.target.checked)}
+                        />
+                        Public
+                    </label>
                     <button type="submit">Create</button>
                 </form>
 
@@ -91,6 +101,7 @@ export default function Collections() {
                             key={c.id}>
                             <Link to={`/collections/${c.id}`}>
                                 {c.name}
+                                {c.isPublic && <span className="collection-badge">Public</span>}
                             </Link>
                         </li>
                     ))}

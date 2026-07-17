@@ -85,7 +85,10 @@ export default function CollectionDetail() {
 
     return (
         <div>
-            <h1>{collection.name}</h1>
+            <h1>
+                {collection.name}
+                {collection.isPublic && <span className="collection-badge">Public</span>}
+            </h1>
             <p>{collection.description}</p>
             <Link to="/collections">Back to Collections</Link>
 

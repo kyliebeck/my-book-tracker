@@ -1,33 +1,37 @@
 import { supabase } from "../lib/supabase";
+import type { Collection } from "../types";
 
+function mapCollection(row: any): Collection {
+    return { ...row, isPublic: row.is_public };
+}
 
-export async function getMyCollections() {
+export async function getMyCollections(): Promise<Collection[]> {
     const { data, error } = await supabase
         .from("collections")
         .select("*")
         .order("created_at", { ascending: false });
     if (error) throw error;
-    return data;
+    return (data ?? []).map(mapCollection);
 }
 
-export async function getCollectionById(collectionId: string) {
+export async function getCollectionById(collectionId: string): Promise<Collection> {
     const { data, error } = await supabase
         .from("collections")
         .select("*")
         .eq("id", collectionId)
         .single();
     if (error) throw error;
-    return data;
+    return mapCollection(data);
 }
 
-export async function createCollection(name: string, ownerId: string, description?: string) {
+export async function createCollection(name: string, ownerId: string, description?: string, isPublic = false) {
     const { data, error } = await supabase
         .from("collections")
-        .insert({ name, description, owner_id: ownerId })
+        .insert({ name, description, owner_id: ownerId, is_public: isPublic })
         .select()
         .single();
     if (error) throw error;
-    return data;
+    return mapCollection(data);
 }
 
 export async function addBookToCollection(collectionId: string, bookId: string) {
