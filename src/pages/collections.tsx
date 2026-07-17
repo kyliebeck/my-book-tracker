@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { getMyCollections, createCollection, } from "../services/collections";
+import { getMyCollections, createCollection } from "../services/collections";
+
 import type { Collection } from "../types";
 import '../styles/collections.css';
 import { Link } from "react-router-dom";
@@ -85,8 +86,8 @@ export default function Collections() {
 
                 <ul className="collection-list">
                     {collections.map((c) => (
-                        <li 
-                        className="collection-item"
+                        <li
+                            className="collection-item"
                             key={c.id}>
                             <Link to={`/collections/${c.id}`}>
                                 {c.name}
