@@ -40,6 +40,14 @@ export async function searchBooks(query: string): Promise<Book[]> {
     return (data.items ?? []).map(mapVolumeToBook);
 }
 
+export async function searchByGenre(genre: string): Promise<Book[]> {
+    const url = `${BASE_URL}?q=${encodeURIComponent(`subject:"${genre}"`)}&orderBy=relevance&maxResults=20&key=${KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Google Books error: ${res.status}`);
+    const data: { items?: GoogleVolume[] } = await res.json();
+    return (data.items ?? []).map(mapVolumeToBook);
+}
+
 export async function getBookById(id: string): Promise<Book> {
     const url = `${BASE_URL}/${id}?key=${KEY}`;
     const res = await fetch(url);

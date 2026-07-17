@@ -6,16 +6,24 @@ import BookDetail from "./pages/bookDetail";
 import Discover from "./pages/discover";
 import Community from "./pages/community";
 import Login from "./pages/login";
+import { useAuth } from "./hooks/useAuth";
+import { supabase } from "./lib/supabase";
 
 export default function App() {
+  const { user } = useAuth();
+
   return (
     <div>
-      <nav style={{ display: "flex", gap: "1rem", padding: "1rem" }}>
+      <nav style={{ display: "flex", gap: "1rem", padding: "1rem", alignItems: "center" }}>
         <Link to="/">Home</Link>
         <Link to="/collections">Collections</Link>
         <Link to="/discover">Discover</Link>
         <Link to="/community">Community</Link>
-        <Link to="/login">Login</Link>
+        {user ? (
+          <button style={{ marginLeft: "auto" }} onClick={() => supabase.auth.signOut()}>Log Out</button>
+        ) : (
+          <Link style={{ marginLeft: "auto" }} to="/login">Login</Link>
+        )}
       </nav>
 
       <main style={{ padding: "1rem" }}>

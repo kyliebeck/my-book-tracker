@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getCollectionById, getBookIdsForCollection, addBookToCollection } from "../services/collections";
 import { getBookById, searchBooks } from "../services/googleBooks";
 import { useAuth } from "../hooks/useAuth";
 import type { Book, Collection } from "../types";
+import '../styles/collections.css';
 
 export default function CollectionDetail() {
     const { id } = useParams<{ id: string }>();
@@ -77,7 +78,7 @@ export default function CollectionDetail() {
     }
 
     if (loading) return <p>Loading...</p>;
-    if (error) return <p style={{ color: "red" }}>{error}</p>;
+    if (error) return <p className="error-text">{error}</p>;
     if (!collection) return <p>Collection not found.</p>;
 
     const addedIds = new Set(books.map((b) => b.id));
@@ -86,27 +87,31 @@ export default function CollectionDetail() {
         <div>
             <h1>{collection.name}</h1>
             <p>{collection.description}</p>
+            <Link to="/collections">Back to Collections</Link>
 
             {books.length === 0 ? (
                 <p>No books in this collection yet.</p>
             ) : (
-                <ul style={{ listStyle: "none", padding: 0 }}>
+                <ul className="book-list">
                     {books.map((book) => (
-                        <li key={book.id} style={{ display: "flex", gap: "1rem", margin: "1rem 0" }}>
-                            {book.thumbnail && <img src={book.thumbnail} alt={book.title} />}
-                            <div>
-                                <strong>{book.title}</strong>
-                                <div>{book.authors.join(", ")}</div>
-                            </div>
+                        <li key={book.id} className="book-item">
+                            <Link to={`/books/${book.id}`} className="book-link">
+                                {book.thumbnail && <img src={book.thumbnail} alt={book.title} />}
+                                <div>
+                                    <h2>{book.title}</h2>
+                                    <div>{book.authors.join(", ")}</div>
+                                    {book.pageCount && <p>{book.pageCount} pages</p>}
+                                </div>
+                            </Link>
                         </li>
                     ))}
                 </ul>
             )}
 
             {user && (
-                <div style={{ marginTop: "2rem" }}>
+                <div className="add-book-section">
                     <h2>Add a book</h2>
-                    <form onSubmit={handleSearch}>
+                    <form className="add-book-form" onSubmit={handleSearch}>
                         <input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -116,23 +121,28 @@ export default function CollectionDetail() {
                     </form>
 
                     {searching && <p>Loading...</p>}
-                    {searchError && <p style={{ color: "red" }}>{searchError}</p>}
+                    {searchError && <p className="error-text">{searchError}</p>}
 
-                    <ul style={{ listStyle: "none", padding: 0 }}>
+                    <ul className="book-list">
                         {searchResults.map((book) => {
                             const alreadyAdded = addedIds.has(book.id);
                             return (
-                                <li key={book.id} style={{ display: "flex", gap: "1rem", margin: "1rem 0" }}>
-                                    {book.thumbnail && <img src={book.thumbnail} alt={book.title} />}
-                                    <div>
-                                        <strong>{book.title}</strong>
-                                        <div>{book.authors.join(", ")}</div>
-                                        {alreadyAdded ? (
-                                            <span>Already in this collection</span>
-                                        ) : (
-                                            <button onClick={() => handleAdd(book.id)}>Add to collection</button>
-                                        )}
-                                    </div>
+                                <li key={book.id} className="book-item">
+                                    <Link to={`/books/${book.id}`} className="book-link">
+                                        {book.thumbnail && <img src={book.thumbnail} alt={book.title} />}
+                                        <div>
+                                            <h2>{book.title}</h2>
+                                            <div>{book.authors.join(", ")}</div>
+
+                                            {book.pageCount && <p>{book.pageCount} pages</p>}
+                                        </div>
+                                    </Link>
+
+                                    {alreadyAdded ? (
+                                        <span>Added!</span>
+                                    ) : (
+                                        <button onClick={() => handleAdd(book.id)}>+</button>
+                                    )}
                                 </li>
                             );
                         })}
