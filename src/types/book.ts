@@ -7,4 +7,6 @@ export interface Book {
     categories?: string[];
     publishedDate?: string;
     pageCount?: number;
+    publisher?: string;
+
 }
