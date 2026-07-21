@@ -8,5 +8,11 @@ export interface Book {
     publishedDate?: string;
     pageCount?: number;
     publisher?: string;
+    subtitle?: string;
+    isbn?: string;         // ISBN-10 or ISBN-13
+    language?: string;      // e.g., "en", "fr", "es"
+    printType?: string;      // e.g., "BOOK", "MAGAZINE"
+    averageRating?: number; // average rating from Google Books
+    ratingsCount?: number;  // number of ratings from Google Books
 
 }

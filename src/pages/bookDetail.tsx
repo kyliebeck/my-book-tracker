@@ -41,20 +41,35 @@ export default function BookDetail() {
 
 
 
-
+    const cover = book.thumbnail?.replace("http://", "https://").replace("zoom=1", "zoom=2")
     return (
         <div>
             <h1>
                 {book.title}
-            </h1>
 
+            </h1>
+            <div className="book-cover">
+                {cover && <img src={cover} alt={`${book.title} cover`} />}
+            </div>
             <div className="book-detail">
                 <p>Author: {book.authors?.join(", ")}</p>
                 <p>Publisher: {book.publisher}</p>
                 <p>Published Date: {book.publishedDate}</p>
                 <p>Page Count: {book.pageCount}</p>
+                {book.description && <div dangerouslySetInnerHTML={{ __html: book.description }} />}
+
+
+
                 <p>Categories: {book.categories?.join(", ")}</p>
-               
+
+                <p>ISBN: {book.isbn}</p>
+                <p>Language: {book.language}</p>
+                <p>Print Type: {book.printType}</p>
+                <p>Average Rating: {book.averageRating}</p>
+                <p>Ratings Count: {book.ratingsCount}</p>
+
+
+
             </div>
 
 

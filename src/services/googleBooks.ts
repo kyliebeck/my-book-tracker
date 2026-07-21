@@ -14,6 +14,13 @@ interface GoogleVolume {
         categories?: string[];
         publishedDate?: string;
         pageCount?: number;
+        publisher?: string;
+        subtitle?: string;
+        language?: string;
+        printType?: string;
+        averageRating?: number;
+        ratingsCount?: number;
+        industryIdentifiers?: { type: string; identifier: string }[];
     };
 }
 // Google's response is deeply nested; this maps one "volume" to our Book.
@@ -28,6 +35,15 @@ function mapVolumeToBook(volume: GoogleVolume): Book {
         categories: info.categories,
         publishedDate: info.publishedDate,
         pageCount: info.pageCount,
+        publisher: info.publisher,
+        subtitle: info.subtitle,
+        language: info.language,
+        printType: info.printType,
+        averageRating: info.averageRating,
+        ratingsCount: info.ratingsCount,
+
+        isbn: info.industryIdentifiers?.find((id) => id.type === "ISBN_13")?.identifier
+            ?? info.industryIdentifiers?.find((id) => id.type === "ISBN_10")?.identifier,
     };
 }
 
