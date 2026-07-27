@@ -1,14 +1,41 @@
 import { supabase } from "../lib/supabase";
 import type { Collection } from "../types";
 
-function mapCollection(row: any): Collection {
-    return { ...row, isPublic: row.is_public };
+interface CollectionRow {
+    id: string;
+    name: string;
+    description?: string | null;
+    owner_id: string;
+    is_public: boolean;
+    created_at: string;
+}
+
+function mapCollection(row: CollectionRow): Collection {
+    return {
+        id: row.id,
+        name: row.name,
+        description: row.description ?? undefined,
+        ownerId: row.owner_id,
+        bookIds: [],
+        isPublic: row.is_public,
+        createdAt: row.created_at,
+    };
 }
 
 export async function getMyCollections(): Promise<Collection[]> {
     const { data, error } = await supabase
         .from("collections")
         .select("*")
+        .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapCollection);
+}
+
+export async function getPublicCollections(): Promise<Collection[]> {
+    const { data, error } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("is_public", true)
         .order("created_at", { ascending: false });
     if (error) throw error;
     return (data ?? []).map(mapCollection);

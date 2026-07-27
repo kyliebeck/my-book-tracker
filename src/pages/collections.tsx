@@ -49,6 +49,8 @@ export default function Collections() {
         };
     }, [user]);
 
+
+
     async function handleCreate(e: React.FormEvent) {
         e.preventDefault();
         if (!name.trim() || !user) return;
