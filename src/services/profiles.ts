@@ -7,14 +7,14 @@ interface ProfileRow {
 }
 
 export async function getProfilesByIds(ids: string[]): Promise<Profile[]> {
-    if (ids.length === 0) return [];          // no ids → skip the query entirely
+    if (ids.length === 0) return [];
     const { data, error } = await supabase
         .from("profiles")
         .select("id, display_name")
-        .in("id", ids)                   // ← which column, which array?
+        .in("id", ids)
     if (error) throw error;
     return (data ?? []).map((row: ProfileRow) => ({
         id: row.id,
-        displayName: row.display_name ?? "Unknown",        // ← snake_case → camelCase, handle null
+        displayName: row.display_name ?? "Unknown",
     }));
 }
