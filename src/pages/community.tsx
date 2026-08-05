@@ -24,10 +24,10 @@ export default function Community() {
                 if (ignore) return;
                 setCollections(data);
 
-                const ownerIds = [...new Set(data.map((c) => c.ownerId))];   
+                const ownerIds = [...new Set(data.map((c) => c.ownerId))];
                 const profiles = await getProfilesByIds(ownerIds);
                 if (ignore) return;
-                setNames(Object.fromEntries(profiles.map((p) => [p.id, p.displayName]))); 
+                setNames(Object.fromEntries(profiles.map((p) => [p.id, p.displayName])));
                 setError("");
             } catch (err) {
                 if (ignore) return;
@@ -55,13 +55,10 @@ export default function Community() {
 
                 <ul className="community-list">
                     {collections.map((c) => (
-                        <li
-                            className="community-item"
-                            key={c.id}>
-                            <Link to={`/collections/${c.id}`}>
-                                {c.name}
-                                <span>by {names[c.ownerId] ?? "…"}</span>
-
+                        <li>
+                            <Link className="community-item" to={`/collections/${c.id}`}>
+                                <div className="community-item-title" key={c.id}>{c.name}</div>
+                                <div className="community-item-owner"> by {names[c.ownerId] ?? "…"}</div>
                             </Link>
                         </li>
                     ))}
