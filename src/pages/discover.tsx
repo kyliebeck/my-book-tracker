@@ -5,6 +5,7 @@ import Cover from "../components/Cover";
 import Toast, { type ToastState } from "../components/Toast";
 import { BookGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
 import useDocumentTitle from "../hooks/useDocumentTitle";
+import useScrollReveal from "../hooks/useScrollReveal";
 import type { Book } from "../types";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -35,6 +36,8 @@ export default function Discover() {
     const [searched, setSearched] = useState(false);
 
     useDocumentTitle(activeGenre ? `${activeGenre} books` : "Discover");
+
+    useScrollReveal(books);
 
     async function handleSearch(e: React.FormEvent) {
         e.preventDefault();

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { Link } from "react-router-dom";
+import CollectionCard from "../components/CollectionCard";
+import useCollectionCovers from "../hooks/useCollectionCovers";
 import { getPublicCollections, getBookCountsByCollection } from "../services/collections";
 import { getProfilesByIds } from "../services/profiles";
 import type { Collection } from "../types";
 import { CollectionGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
 import useDocumentTitle from "../hooks/useDocumentTitle";
+import useScrollReveal from "../hooks/useScrollReveal";
 import '../styles/community.css';
 
 
@@ -19,6 +21,9 @@ export default function Community() {
     const [counts, setCounts] = useState<Record<string, number>>({});
 
     useDocumentTitle("Community");
+
+    useScrollReveal(collections);
+    const covers = useCollectionCovers(collections.map((c) => c.id));
 
 
     useEffect(() => {
@@ -83,18 +88,13 @@ export default function Community() {
             <ul className="collection-grid">
                 {collections.map((c) => (
                     <li key={c.id}>
-                        <Link className="collection-card" to={`/collections/${c.id}`}>
-                            <span className="collection-card-name">{c.name}</span>
-                            <span className="collection-card-meta">
-                                <span className="collection-card-owner">
-                                    by {names[c.ownerId] ?? "…"}
-                                </span>
-                                <span>
-                                    {counts[c.id] ?? 0}{" "}
-                                    {counts[c.id] === 1 ? "book" : "books"}
-                                </span>
-                            </span>
-                        </Link>
+                        <CollectionCard
+                            id={c.id}
+                            name={c.name}
+                            owner={names[c.ownerId] ?? "…"}
+                            count={counts[c.id] ?? 0}
+                            covers={covers[c.id]}
+                        />
                     </li>
                 ))}
             </ul>

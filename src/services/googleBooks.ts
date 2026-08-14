@@ -117,6 +117,35 @@ export async function searchByGenre(genre: string): Promise<Book[]> {
     return (data.items ?? []).map(mapVolumeToBook);
 }
 
+/**
+ * Google Books has no batch-lookup endpoint, so fetching several volumes means
+ * one request each. This caches per volume id for the life of the page so
+ * navigating back to a list doesn't refetch, and a single failed volume
+ * resolves to null instead of rejecting the whole set.
+ */
+const volumeCache = new Map<string, Book | null>();
+
+export async function getBooksByIds(ids: string[]): Promise<Map<string, Book>> {
+    const uncached = [...new Set(ids)].filter((id) => !volumeCache.has(id));
+    await Promise.all(
+        uncached.map(async (id) => {
+            try {
+                volumeCache.set(id, await getBookById(id));
+            } catch (err) {
+                console.error(`Could not load volume ${id}`, err);
+                volumeCache.set(id, null);
+            }
+        })
+    );
+
+    const found = new Map<string, Book>();
+    for (const id of ids) {
+        const book = volumeCache.get(id);
+        if (book) found.set(id, book);
+    }
+    return found;
+}
+
 export async function getBookById(id: string): Promise<Book> {
     const url = `${BASE_URL}/${id}?key=${KEY}`;
     const res = await fetch(url);

@@ -49,6 +49,29 @@ export function BookDetailSkeleton() {
     );
 }
 
+/**
+ * Placeholder for the home shelves. Open Library's sorted query can take many
+ * seconds, and without this the whole band below the hero is simply absent —
+ * which reads as "the shelves are gone" rather than "still loading".
+ */
+export function ShelfSkeleton({ rows = 2, perRow = 10 }: { rows?: number; perRow?: number }) {
+    return (
+        <>
+            {Array.from({ length: rows }, (_, r) => (
+                <div className="shelf" key={r} aria-hidden="true">
+                    <div className="shelf-track shelf-track-static">
+                        {Array.from({ length: perRow }, (_, i) => (
+                            <div className="shelf-item" key={i}>
+                                <div className="skeleton skeleton-cover" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </>
+    );
+}
+
 /** Screen-reader announcement to pair with any visual skeleton. */
 export function LoadingAnnouncement({ label = "Loading" }: { label?: string }) {
     return (

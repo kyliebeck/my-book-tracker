@@ -257,11 +257,27 @@ a:focus-visible,
   }
 }
 
+/* Containers fade in on mount; individual items are handled by scroll-reveal
+   below so off-screen ones don't animate before you reach them. */
 .book-list,
 .collection-grid,
 .hero > *,
 .book-detail-container > * {
   animation: rise-in 0.42s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* Applied by useScrollReveal; `.revealed` lands when the item enters view. */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.5s cubic-bezier(0.2, 0.7, 0.3, 1),
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
 }
 
 /* Stagger the hero so the eyebrow, headline and buttons arrive in sequence. */
@@ -281,6 +297,14 @@ a:focus-visible,
   .hero > *,
   .book-detail-container > * {
     animation: none;
+  }
+
+  /* The hook bails out under reduced motion, but guard the CSS too so nothing
+     can be left stuck at opacity 0. */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 
@@ -592,13 +616,49 @@ h1 em {
   min-width: 0;
 }
 
+/* Perspective on the item lets the cover tilt in 3D rather than just sliding,
+   so it reads as a physical book being picked off the shelf. */
+.book-item {
+  perspective: 900px;
+}
+
 .book-item:hover .cover {
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-8px) scale(1.02) rotateX(7deg) rotateY(-5deg);
   box-shadow:
     0 34px 44px -14px rgba(0, 0, 0, 0.9),
     0 2px 6px rgba(0, 0, 0, 0.5),
     inset 0 0 0 1px var(--accent-border),
     var(--glow);
+}
+
+/* Light rakes across the cover as it tilts. Excludes .cover-empty, whose
+   ::before is already the blind-stamped frame — same pseudo-element, and this
+   rule would otherwise win on source order and blank it out. */
+.cover:not(.cover-empty)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.16) 48%,
+    transparent 62%
+  );
+  transition: opacity 0.32s ease;
+}
+
+.book-item:hover .cover:not(.cover-empty)::before,
+.shelf-item:hover .cover:not(.cover-empty)::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-item:hover .cover {
+    transform: translateY(-4px);
+  }
 }
 
 .book-link {
@@ -686,6 +746,92 @@ h1 em {
   box-shadow: var(--glow);
 }
 
+/* ---------- spotlight (home) ---------- */
+
+/* The single most-read book, given the full-bleed treatment. Its own cover,
+   blurred and over-scaled, tints the band behind it. */
+.spotlight {
+  position: relative;
+  margin: 0 -40px;
+  padding: 62px 40px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+
+  @media (max-width: 1024px) {
+    margin: 0 -20px;
+    padding: 40px 20px;
+  }
+}
+
+.spotlight-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse 80% 90% at 30% 50%, #000 10%, transparent 75%);
+}
+
+.spotlight-backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(80px) saturate(1.7);
+  transform: scale(1.4);
+  opacity: 0.45;
+}
+
+.spotlight-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 42px;
+
+  @media (max-width: 700px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+}
+
+.spotlight .cover {
+  flex: 0 0 auto;
+  width: 152px;
+}
+
+.spotlight-body {
+  min-width: 0;
+}
+
+.spotlight-title {
+  font-family: var(--heading);
+  font-size: clamp(28px, 3.6vw, 46px);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--text-h);
+  font-variation-settings: 'opsz' 100, 'SOFT' 0, 'WONK' 1;
+  margin: 14px 0 10px;
+  max-width: 18ch;
+}
+
+.spotlight-author {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--accent);
+  font-variation-settings: 'opsz' 30, 'SOFT' 30, 'WONK' 1;
+}
+
+.spotlight-readers {
+  margin-top: 18px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text);
+  opacity: 0.75;
+}
+
 /* ---------- scrolling cover shelf (home) ---------- */
 
 .shelf {
@@ -724,6 +870,12 @@ h1 em {
 
 .shelf-track.reverse {
   animation-direction: reverse;
+}
+
+/* Skeleton shelves shouldn't scroll — they'd slide out of the masked edges and
+   leave the band looking empty again. */
+.shelf-track-static {
+  animation: none;
 }
 
 .shelf:hover .shelf-track {
@@ -788,6 +940,17 @@ h1 em {
   gap: 18px;
 }
 
+/* The <li> stretches to the row height but the <a> inside it doesn't, so cards
+   in the same row ended up different heights once stacks of 2 vs 3 covers
+   changed their content. Make the card fill its cell. */
+.collection-grid > li {
+  display: flex;
+}
+
+.collection-grid > li > .collection-card {
+  flex: 1;
+}
+
 .collection-card {
   position: relative;
   display: flex;
@@ -840,6 +1003,69 @@ h1 em {
 
 .collection-card:hover::before {
   opacity: 1;
+}
+
+/* Fanned stack of the shelf's actual covers. Sits above the title and fans
+   open on hover, so a collection reads as books rather than a text row. */
+.card-stack {
+  display: flex;
+  align-items: flex-end;
+  height: 84px;
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+.card-spine {
+  position: relative;
+  flex: 0 0 auto;
+  width: 56px;
+  aspect-ratio: 2 / 3;
+  border-radius: 1px 3px 3px 1px;
+  overflow: hidden;
+  background: var(--surface-2);
+  box-shadow:
+    0 10px 18px -6px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transform-origin: bottom center;
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.card-spine img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Overlap, then tilt each one a little so it looks stacked by hand. */
+.card-spine + .card-spine {
+  margin-left: -26px;
+}
+
+.card-spine:nth-child(1) {
+  transform: rotate(-5deg);
+}
+.card-spine:nth-child(2) {
+  transform: rotate(1deg) translateY(-2px);
+}
+.card-spine:nth-child(3) {
+  transform: rotate(6deg);
+}
+
+.collection-card:hover .card-spine:nth-child(1) {
+  transform: rotate(-9deg) translate(-7px, -4px);
+}
+.collection-card:hover .card-spine:nth-child(2) {
+  transform: rotate(0deg) translateY(-8px);
+}
+.collection-card:hover .card-spine:nth-child(3) {
+  transform: rotate(10deg) translate(7px, -4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-spine,
+  .collection-card:hover .card-spine {
+    transition: none;
+  }
 }
 
 .collection-card-name {

@@ -8,9 +8,11 @@ import {
 
 import type { Collection } from "../types";
 import { CollectionGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
+import CollectionCard from "../components/CollectionCard";
 import useDocumentTitle from "../hooks/useDocumentTitle";
+import useScrollReveal from "../hooks/useScrollReveal";
+import useCollectionCovers from "../hooks/useCollectionCovers";
 import '../styles/collections.css';
-import { Link } from "react-router-dom";
 
 export default function Collections() {
     const { user, loading: authLoading } = useAuth();
@@ -22,6 +24,9 @@ export default function Collections() {
     const [error, setError] = useState("");
 
     useDocumentTitle("My Collections");
+
+    useScrollReveal(collections);
+    const covers = useCollectionCovers(collections.map((c) => c.id));
 
     // Single fetch path, used both on mount and after creating a collection.
     const load = useCallback(async () => {
@@ -133,18 +138,13 @@ export default function Collections() {
             <ul className="collection-grid">
                 {collections.map((c) => (
                     <li key={c.id}>
-                        <Link className="collection-card" to={`/collections/${c.id}`}>
-                            <span className="collection-card-name">{c.name}</span>
-                            <span className="collection-card-meta">
-                                <span>
-                                    {counts[c.id] ?? 0}{" "}
-                                    {counts[c.id] === 1 ? "book" : "books"}
-                                </span>
-                                {c.isPublic && (
-                                    <span className="collection-badge">Public</span>
-                                )}
-                            </span>
-                        </Link>
+                        <CollectionCard
+                            id={c.id}
+                            name={c.name}
+                            count={counts[c.id] ?? 0}
+                            covers={covers[c.id]}
+                            isPublic={c.isPublic}
+                        />
                     </li>
                 ))}
             </ul>

@@ -72,6 +72,31 @@ export async function getBookCountsByCollection(
     return counts;
 }
 
+/**
+ * First few book ids per collection, for the cover stack on collection cards.
+ * One round trip for every collection on the page, sliced client-side, so the
+ * card art costs a single extra query rather than one per collection.
+ */
+export async function getPreviewBookIds(
+    collectionIds: string[],
+    perCollection = 3
+): Promise<Record<string, string[]>> {
+    if (collectionIds.length === 0) return {};
+    const { data, error } = await supabase
+        .from("collection_books")
+        .select("collection_id, book_id")
+        .in("collection_id", collectionIds);
+    if (error) throw error;
+
+    const previews: Record<string, string[]> = {};
+    for (const id of collectionIds) previews[id] = [];
+    for (const row of data ?? []) {
+        const bucket = previews[row.collection_id];
+        if (bucket && bucket.length < perCollection) bucket.push(row.book_id);
+    }
+    return previews;
+}
+
 export async function getCollectionById(collectionId: string): Promise<Collection> {
     const { data, error } = await supabase
         .from("collections")
