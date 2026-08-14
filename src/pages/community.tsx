@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
-import { getPublicCollections } from "../services/collections";
+import { getPublicCollections, getBookCountsByCollection } from "../services/collections";
 import { getProfilesByIds } from "../services/profiles";
 import type { Collection } from "../types";
+import { CollectionGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import '../styles/community.css';
 
 
@@ -14,6 +16,9 @@ export default function Community() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [names, setNames] = useState<Record<string, string>>({});
+    const [counts, setCounts] = useState<Record<string, number>>({});
+
+    useDocumentTitle("Community");
 
 
     useEffect(() => {
@@ -25,9 +30,14 @@ export default function Community() {
                 setCollections(data);
 
                 const ownerIds = [...new Set(data.map((c) => c.ownerId))];
-                const profiles = await getProfilesByIds(ownerIds);
+                // Owner names and book counts are independent — fetch together.
+                const [profiles, bookCounts] = await Promise.all([
+                    getProfilesByIds(ownerIds),
+                    getBookCountsByCollection(data.map((c) => c.id)),
+                ]);
                 if (ignore) return;
                 setNames(Object.fromEntries(profiles.map((p) => [p.id, p.displayName])));
+                setCounts(bookCounts);
                 setError("");
             } catch (err) {
                 if (ignore) return;
@@ -41,29 +51,53 @@ export default function Community() {
     }, []);
 
 
-    if (authLoading) return <p>Loading...</p>;
-    if (!user) return <p>Please log in to browse the community.</p>;
+    if (authLoading) return <CollectionGridSkeleton />;
+    if (!user) {
+        return (
+            <div className="empty-state">
+                <strong>Sign in to browse the community</strong>
+                See public shelves built by other readers.
+            </div>
+        );
+    }
 
     return (
-        <main>
-            <div className="community-container">
-                <h1 className="community-title">Community</h1>
+        <div className="community-container">
+            <p className="eyebrow">Public Shelves</p>
+            <h1>Community</h1>
 
-                {loading && <p>Loading...</p>}
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                {!loading && collections.length === 0 && <p>No public collections yet.</p>}
+            {loading && (
+                <>
+                    <LoadingAnnouncement label="Loading public collections" />
+                    <CollectionGridSkeleton />
+                </>
+            )}
+            {error && <p className="error-text">{error}</p>}
+            {!loading && collections.length === 0 && (
+                <div className="empty-state">
+                    <strong>No public shelves yet</strong>
+                    When someone marks a collection public, it'll appear here.
+                </div>
+            )}
 
-                <ul className="community-list">
-                    {collections.map((c) => (
-                        <li>
-                            <Link className="community-item" to={`/collections/${c.id}`}>
-                                <div className="community-item-title" key={c.id}>{c.name}</div>
-                                <div className="community-item-owner"> by {names[c.ownerId] ?? "…"}</div>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </main>
+            <ul className="collection-grid">
+                {collections.map((c) => (
+                    <li key={c.id}>
+                        <Link className="collection-card" to={`/collections/${c.id}`}>
+                            <span className="collection-card-name">{c.name}</span>
+                            <span className="collection-card-meta">
+                                <span className="collection-card-owner">
+                                    by {names[c.ownerId] ?? "…"}
+                                </span>
+                                <span>
+                                    {counts[c.id] ?? 0}{" "}
+                                    {counts[c.id] === 1 ? "book" : "books"}
+                                </span>
+                            </span>
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </div>
     );
 }

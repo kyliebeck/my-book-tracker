@@ -1,16 +1,30 @@
 :root {
-  --text: #5c4b3a;
-  --text-h: #2e2117;
-  --bg: #faf6f0;
-  --border: #e0d3c2;
-  --code-bg: #f0e6d8;
-  --accent: #8b5e3c;
-  --accent-bg: rgba(139, 94, 60, 0.1);
-  --accent-border: rgba(139, 94, 60, 0.45);
-  --social-bg: rgba(240, 230, 216, 0.6);
-  --error: #a6432f;
-  --shadow:
-    rgba(44, 32, 23, 0.08) 0 10px 15px -3px, rgba(44, 32, 23, 0.05) 0 4px 6px -2px;
+  /* Surfaces — in dark UI, elevation reads as lightness, not shadow.
+     bg-deep < bg < surface < surface-2 */
+  --bg-deep: #0d0a07;
+  --bg: #14100b;
+  --surface: #1e1710;
+  --surface-2: #2a2018;
+  --border: #3a2c1e;
+
+  --text: #cbb99f;
+  --text-h: #f7efe2;
+
+  --accent: #d9a668;
+  --accent-bg: rgba(217, 166, 104, 0.12);
+  --accent-border: rgba(217, 166, 104, 0.5);
+  --glow: 0 0 40px rgba(217, 166, 104, 0.18);
+
+  /* 1px top-edge highlight — fakes light falling from above. This is what
+     makes a dark surface read as a raised object rather than a flat hole. */
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --social-bg: rgba(42, 32, 24, 0.6);
+  --error: #e08a70;
+  --shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+
+  /* Alias so existing card CSS keeps working; new work should use --surface. */
+  --code-bg: var(--surface);
 
   --sans: 'Karla', system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Fraunces', Georgia, 'Times New Roman', serif;
@@ -18,7 +32,7 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -31,70 +45,129 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #d8c3a5;
-    --text-h: #f5ede1;
-    --bg: #241a12;
-    --border: #4a3826;
-    --code-bg: #2e2117;
-    --accent: #c9975f;
-    --accent-bg: rgba(201, 151, 95, 0.15);
-    --accent-border: rgba(201, 151, 95, 0.45);
-    --social-bg: rgba(74, 56, 38, 0.5);
-    --error: #d97a63;
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+#social .button-icon {
+  filter: invert(1) brightness(2);
 }
 
 #root {
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
   border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: linear-gradient(
+    rgba(217, 166, 104, 0.03),
+    transparent 380px
+  );
+}
+
+/* Without this, `width: 100%` + padding overflows the container — it was making
+   the no-cover tiles 218px wide inside a 190px grid column. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  min-height: 100svh;
+  /* Layered top to bottom: vignette pulling the corners down, a warm pool of
+     light spilling from above, a faint bounce off the floor, then the base
+     ramp. Fixed so it stays put while content scrolls through it. */
+  background:
+    radial-gradient(
+      ellipse 75% 60% at 50% 38%,
+      transparent 40%,
+      rgba(0, 0, 0, 0.5) 100%
+    ),
+    radial-gradient(
+      ellipse 90% 55% at 50% -15%,
+      rgba(217, 166, 104, 0.16),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 70% 45% at 50% 115%,
+      rgba(217, 166, 104, 0.05),
+      transparent 70%
+    ),
+    linear-gradient(var(--bg) 35%, var(--bg-deep));
+  background-attachment: fixed;
+}
+
+/* Film grain. Kills the flat-gradient plasticky look and gives the dark
+   surfaces something to sit on. Non-interactive, sits under the sticky nav. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
   color: var(--text-h);
 }
 
+/* Fraunces axes: opsz drives thick/thin contrast (144 = most dramatic),
+   SOFT 0 = sharp terminals, WONK 1 = the flamboyant alternate g/y/a. */
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
+  font-size: clamp(46px, 8.5vw, 108px);
+  font-weight: 900;
+  line-height: 0.94;
+  /* Negative tracking also eats the word gaps at this weight, so buy some
+     back with word-spacing or the words collide. */
+  letter-spacing: -0.028em;
+  word-spacing: 0.06em;
+  font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 1;
+  /* Generous bottom margin: line-height 0.94 pulls the box tight, and the WONK
+     swash descenders on y/g overflow it and would crowd whatever follows. */
+  margin: 40px 0 34px;
+  text-wrap: balance;
 
   @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+    margin: 24px 0 16px;
   }
 }
 
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'opsz' 72, 'SOFT' 20, 'WONK' 1;
   margin: 0 0 8px;
+  text-wrap: balance;
+}
 
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+/* Tiny tracked-out sans label. Pairs against the huge serif so the size
+   jump reads as deliberate rather than accidental. */
+.eyebrow {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+
+.eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--accent-border), transparent);
 }
 
 p {
@@ -148,6 +221,69 @@ button:focus-visible {
   outline-offset: 1px;
 }
 
+/* Links and card-shaped targets had no focus indicator at all, so keyboard
+   users got nothing on the cover grid or the collection cards. */
+a:focus-visible,
+.book-link:focus-visible,
+.collection-card:focus-visible,
+.shelf-item a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+  text-decoration: none;
+}
+
+.book-link:focus-visible .cover {
+  box-shadow:
+    0 22px 34px -12px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px var(--accent-border),
+    var(--glow);
+}
+
+::selection {
+  background: var(--accent);
+  color: #1a120a;
+}
+
+/* Content settles in rather than snapping. Grids and heroes opt in. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.book-list,
+.collection-grid,
+.hero > *,
+.book-detail-container > * {
+  animation: rise-in 0.42s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* Stagger the hero so the eyebrow, headline and buttons arrive in sequence. */
+.hero > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.hero > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.hero > *:nth-child(4) {
+  animation-delay: 0.18s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-list,
+  .collection-grid,
+  .hero > *,
+  .book-detail-container > * {
+    animation: none;
+  }
+}
+
 input,
 select,
 textarea {
@@ -167,34 +303,355 @@ textarea:focus {
   outline-offset: 1px;
 }
 
+/* ---------- nav ---------- */
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  /* Wraps rather than overflowing: five uppercase tracked links do not fit on
+     one line at phone widths, and the overflow was pushing the whole page
+     sideways and clipping the hero. */
+  flex-wrap: wrap;
+  gap: 32px;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(20, 16, 11, 0.7);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  @media (max-width: 1024px) {
+    gap: 18px;
+    padding: 16px 20px;
+  }
+
+  @media (max-width: 560px) {
+    gap: 12px 16px;
+    padding: 14px 20px;
+  }
+}
+
+.site-nav a {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  transition: color 0.15s ease;
+  white-space: nowrap;
+
+  @media (max-width: 560px) {
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+  }
+}
+
+.site-nav a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.site-nav .nav-end {
+  margin-left: auto;
+}
+
+/* ---------- layout ---------- */
+
+main {
+  flex: 1;
+  padding: 36px 40px 64px;
+
+  @media (max-width: 1024px) {
+    padding: 24px 20px 40px;
+  }
+}
+
+/* ---------- home hero ---------- */
+
+/* Negative margins cancel main's padding so the hero reaches the full #root
+   width and sits flush under the nav, while its own padding keeps the text
+   aligned with every other page's content. */
+.hero {
+  margin: -36px -40px 0;
+  padding: 96px 40px 104px;
+
+  @media (max-width: 1024px) {
+    margin: -24px -20px 0;
+    padding: 48px 20px 56px;
+  }
+}
+
+.hero h1 {
+  margin: 20px 0 0;
+  max-width: 15ch;
+}
+
+/* Second line of a headline, set in the accent and italicised for a hard tonal
+   break mid-sentence. Any display h1 can use it, not just the hero. */
+h1 em {
+  display: block;
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-lede {
+  margin-top: 28px;
+  max-width: 46ch;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--text);
+
+  @media (max-width: 1024px) {
+    font-size: 17px;
+  }
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 36px;
+  flex-wrap: wrap;
+}
+
+/* Standalone (not piggybacking on the global `button` rules) because the hero
+   CTAs are react-router <Link>s, i.e. anchors. */
+.btn-primary,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 13px 28px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.btn-primary,
+.btn-ghost {
+  text-decoration: none;
+}
+
+.btn-primary:hover,
+.btn-ghost:hover {
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a120a;
+  box-shadow: var(--glow);
+}
+
+.btn-primary:hover {
+  background: #e8b678;
+  border-color: #e8b678;
+  color: #1a120a;
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+
+.btn-primary:disabled:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
+.btn-ghost:hover {
+  background: var(--surface);
+  border-color: var(--accent-border);
+  color: var(--text-h);
+}
+
+/* ---------- covers ---------- */
+
+/* The app's only real visual material. Everything here exists to make a 2:3
+   rectangle of cover art read as a physical object: hard shadow beneath it,
+   a hairline to separate dark covers from the dark page, and a bright edge
+   down the left to suggest a spine catching the light. */
+.cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 4px 4px 2px;
+  overflow: hidden;
+  background: var(--surface-2);
+  box-shadow:
+    0 22px 34px -12px rgba(0, 0, 0, 0.85),
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.28s ease;
+}
+
+.cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Spine highlight + a soft gradient so pale covers don't glare. */
+.cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.22) 0,
+      rgba(255, 255, 255, 0.05) 3px,
+      transparent 7px
+    ),
+    linear-gradient(to top, rgba(0, 0, 0, 0.25), transparent 45%);
+}
+
+/* Fallback tile when Google has no cover for a volume — which is most of them
+   for older titles, so this is a common case, not an edge case. Styled as a
+   blind-stamped clothbound board rather than a grey placeholder. */
+.cover-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 16px;
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--text);
+  font-variation-settings: 'opsz' 20, 'SOFT' 40, 'WONK' 1;
+  background:
+    linear-gradient(152deg, rgba(217, 166, 104, 0.07), transparent 55%),
+    linear-gradient(160deg, #241a12, #15100b);
+  /* Long titles must not push the tile out of the grid rhythm. */
+  overflow: hidden;
+}
+
+/* Blind-stamped frame, inset like a real board. */
+.cover-empty::before {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(217, 166, 104, 0.16);
+  pointer-events: none;
+}
+
+/* Coverless volumes are common enough that a whole grid of identical tiles
+   looks like a rendering fault. Cycle three cloth tones so it reads as a
+   shelf of different bindings instead. */
+.book-item:nth-child(3n + 2) .cover-empty {
+  background:
+    linear-gradient(152deg, rgba(217, 166, 104, 0.04), transparent 55%),
+    linear-gradient(196deg, #2c2016, #14100b);
+}
+
+.book-item:nth-child(3n + 3) .cover-empty {
+  background:
+    linear-gradient(140deg, rgba(217, 166, 104, 0.1), transparent 60%),
+    linear-gradient(168deg, #1c1510, #251b12);
+}
+
+/* ---------- book grid ---------- */
+
 .book-list {
   list-style: none;
   padding: 0;
-  margin: 1rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  margin: 28px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 34px 24px;
 }
 
 .book-item {
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
   text-align: left;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  margin-right: 50px;
-  border-radius: 10px;
-  background: var(--code-bg);
-  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.book-item:hover .cover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 34px 44px -14px rgba(0, 0, 0, 0.9),
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px var(--accent-border),
+    var(--glow);
 }
 
 .book-link {
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
   color: inherit;
   text-decoration: none;
+  min-width: 0;
+  /* Grow to fill the grid row so the add-to-collection control below is pushed
+     to a shared baseline — otherwise books with no author line sit higher and
+     the row of selects looks ragged. */
+  flex: 1;
+}
+
+.book-link:hover {
+  text-decoration: none;
+}
+
+.book-link strong,
+.book-link h2 {
+  font-family: var(--heading);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: 0;
+  color: var(--text-h);
+  font-variation-settings: 'opsz' 14, 'SOFT' 20, 'WONK' 0;
+  margin: 0;
+  /* Clamp to two lines AND reserve both, so the author line sits at the same
+     height whether the title wraps or not. Keeps captions on a shared
+     baseline across each grid row. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.44em;
+}
+
+.book-link > div > div {
+  font-size: 12.5px;
+  color: var(--text);
+  opacity: 0.75;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-link p {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 2px;
 }
 
 .error-text {
@@ -205,19 +662,740 @@ textarea:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  justify-content: center;
-  margin: 1rem 0;
+  justify-content: flex-start;
+  margin: 1rem 0 0;
 }
 
 .genre-btn {
   border-radius: 999px;
-  padding: 6px 16px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 7px 17px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--text);
+}
+
+.genre-btn:hover {
+  color: var(--text-h);
 }
 
 .genre-btn.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg);
+  color: #1a120a;
+  box-shadow: var(--glow);
+}
+
+/* ---------- scrolling cover shelf (home) ---------- */
+
+.shelf {
+  position: relative;
+  margin: 0 -40px;
+  padding: 46px 0;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  /* Fade both ends so covers dissolve into the page instead of being
+     guillotined by the container edge. */
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 14%,
+    #000 86%,
+    transparent
+  );
+
+  @media (max-width: 1024px) {
+    margin: 0 -20px;
+    padding: 32px 0;
+  }
+}
+
+.shelf + .shelf {
+  border-bottom: none;
+}
+
+.shelf-track {
+  display: flex;
+  gap: 22px;
+  width: max-content;
+  /* Track holds the cover list twice, so -50% lands exactly on the seam. */
+  animation: shelf-scroll 78s linear infinite;
+}
+
+.shelf-track.reverse {
+  animation-direction: reverse;
+}
+
+.shelf:hover .shelf-track {
+  animation-play-state: paused;
+}
+
+@keyframes shelf-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shelf-track {
+    animation: none;
+  }
+}
+
+.shelf-item {
+  flex: 0 0 auto;
+  width: 116px;
+}
+
+.shelf-item .cover {
+  border-radius: 2px 3px 3px 2px;
+  box-shadow:
+    0 16px 26px -10px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.shelf-item:hover .cover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 26px 34px -12px rgba(0, 0, 0, 0.9),
+    inset 0 0 0 1px var(--accent-border),
+    var(--glow);
+}
+
+/* Shelf tiles are 116px wide, so the grid's fallback type is oversized here. */
+.shelf-item .cover-empty {
+  padding: 14px 10px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.shelf-item .cover-empty::before {
+  inset: 6px;
+}
+
+/* ---------- collection cards (Collections + Community) ---------- */
+
+/* One definition shared by both pages so they can't drift apart. */
+.collection-grid {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 18px;
+}
+
+.collection-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 148px;
+  padding: 22px 22px 20px 30px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 4px 8px 8px 4px;
+  background:
+    linear-gradient(145deg, rgba(217, 166, 104, 0.05), transparent 60%),
+    var(--surface);
+  box-shadow: var(--shadow), var(--highlight);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Brass spine down the left edge — ties the card to the book motif without
+   needing any cover art. */
+.collection-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: linear-gradient(
+    to bottom,
+    var(--accent),
+    rgba(217, 166, 104, 0.35)
+  );
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.collection-card:hover {
+  background:
+    linear-gradient(145deg, rgba(217, 166, 104, 0.09), transparent 60%),
+    var(--surface-2);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow), var(--glow), var(--highlight);
+  transform: translateY(-3px);
+  text-decoration: none;
+}
+
+.collection-card:hover::before {
+  opacity: 1;
+}
+
+.collection-card-name {
+  font-family: var(--heading);
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text-h);
+  font-variation-settings: 'opsz' 36, 'SOFT' 20, 'WONK' 1;
+}
+
+/* Small tracked caps line: count, owner, public badge. */
+.collection-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.collection-card-owner {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--accent);
+  opacity: 1;
+  font-variation-settings: 'opsz' 20, 'SOFT' 30, 'WONK' 1;
+}
+
+.collection-badge {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  border-radius: 3px;
+  padding: 3px 7px;
+}
+
+/* Inside a display headline the badge would otherwise sit on the baseline of
+   ~100px type and collide with the last letter. */
+h1 .collection-badge {
+  vertical-align: middle;
+  margin-left: 18px;
+  transform: translateY(-0.25em);
+}
+
+/* Visible to screen readers only — pairs with aria-hidden skeletons so the
+   loading state is still announced. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- skeletons ---------- */
+
+/* Placeholders occupy the exact final geometry, so nothing jumps when the real
+   data lands — the point is to remove layout shift, not just to look busy. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(217, 166, 104, 0.09),
+    transparent
+  );
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+.skeleton-cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 4px 4px 2px;
+  box-shadow: var(--shadow), var(--highlight);
+}
+
+.skeleton-line {
+  height: 11px;
+  margin-top: 4px;
+}
+
+.skeleton-line.short {
+  width: 55%;
+  opacity: 0.6;
+}
+
+.skeleton-card {
+  min-height: 148px;
+  border-radius: 4px 8px 8px 4px;
+  box-shadow: var(--shadow), var(--highlight);
+}
+
+.skeleton-block {
+  height: 15px;
+  margin-bottom: 10px;
+}
+
+/* ---------- toast ---------- */
+
+.toast-stack {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+
+  @media (max-width: 560px) {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+  }
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 250px;
+  max-width: 380px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent-border);
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  box-shadow: var(--shadow), var(--highlight);
+  font-size: 14px;
+  color: var(--text-h);
+  animation: toast-in 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.toast.error {
+  border-color: var(--error);
+}
+
+.toast-dismiss {
+  margin-left: auto;
+  padding: 2px 7px;
+  font-size: 15px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  opacity: 0.65;
+}
+
+.toast-dismiss:hover {
+  background: transparent;
+  opacity: 1;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+/* ---------- auth ---------- */
+
+.auth-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0 90px;
+
+  @media (max-width: 1024px) {
+    padding: 24px 0 48px;
+  }
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 424px;
+  padding: 40px 38px 34px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background:
+    linear-gradient(150deg, rgba(217, 166, 104, 0.05), transparent 55%),
+    var(--surface);
+  box-shadow: var(--shadow), var(--highlight);
+
+  @media (max-width: 560px) {
+    padding: 30px 24px 26px;
+  }
+}
+
+.auth-card h1 {
+  font-size: clamp(34px, 6vw, 46px);
+  margin: 14px 0 6px;
+}
+
+.auth-lede {
+  color: var(--text);
+  opacity: 0.8;
+  font-size: 15px;
+  margin-bottom: 26px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.auth-field label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.17em;
+  color: var(--accent);
+}
+
+.auth-field input {
+  width: 100%;
+  padding: 12px 15px;
+  background: var(--bg);
+}
+
+.auth-submit {
+  margin-top: 6px;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-switch {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  text-align: center;
+}
+
+.auth-switch button {
+  padding: 0 0 0 6px;
+  font-size: 14px;
+  background: none;
+  border: none;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-switch button:hover {
+  background: none;
+  color: var(--text-h);
+}
+
+.auth-message {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.auth-message.error {
+  border-color: var(--error);
+  background: rgba(224, 138, 112, 0.1);
+}
+
+/* ---------- not found ---------- */
+
+.notfound {
+  padding: 90px 0 120px;
+}
+
+.notfound h1 {
+  margin-top: 14px;
+}
+
+/* Measure belongs on the prose only — capping the whole block forced the
+   display headline to wrap onto a third line. */
+.notfound p:not(.eyebrow) {
+  max-width: 52ch;
+  color: var(--text);
+  margin-bottom: 30px;
+}
+
+/* ---------- empty states ---------- */
+
+.empty-state {
+  margin-top: 40px;
+  padding: 46px 34px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  max-width: 56ch;
+}
+
+.empty-state strong {
+  display: block;
+  font-family: var(--heading);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 8px;
+  font-variation-settings: 'opsz' 30, 'SOFT' 20, 'WONK' 1;
+}
+
+/* ---------- discover toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-form {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.search-form input {
+  flex: 1;
+  max-width: 420px;
+  padding: 12px 16px;
+  background: var(--surface);
+}
+
+.search-form input::placeholder {
+  color: var(--text);
+  opacity: 0.45;
+}
+
+/* ---------- book detail ---------- */
+
+/* Blurred, over-scaled copy of the cover as an ambient backdrop — the page
+   takes its colour from whatever book you're looking at. */
+/* z-index 0 rather than -1: a negative index would paint behind #root's own
+   background gradient and vanish. The siblings below lift above it instead.
+   Negative left/right/top break it out of main's padding so it bleeds the
+   full width and runs up under the nav — otherwise it reads as a floating
+   rectangle with hard edges. */
+.detail-backdrop {
+  position: absolute;
+  top: -60px;
+  left: -40px;
+  right: -40px;
+  height: 620px;
+  z-index: 0;
+  overflow: hidden;
+  /* Radial rather than linear so the sides fade too, leaving no visible seam. */
+  mask-image: radial-gradient(
+    ellipse 72% 100% at 50% 0%,
+    #000 20%,
+    transparent 78%
+  );
+
+  @media (max-width: 1024px) {
+    left: -20px;
+    right: -20px;
+  }
+}
+
+.detail-backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(70px) saturate(1.5);
+  transform: scale(1.25);
+  opacity: 0.4;
+}
+
+.book-detail-container {
+  position: relative;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 56px;
+  align-items: start;
+  padding-top: 24px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+/* Lift the real content above .detail-backdrop. */
+.book-detail-container > h1,
+.book-cover,
+.book-detail {
+  position: relative;
+  z-index: 1;
+}
+
+.book-detail-container > h1 {
+  grid-column: 2;
+  font-size: clamp(34px, 4.4vw, 62px);
+  margin: 0 0 6px;
+
+  @media (max-width: 1024px) {
+    grid-column: 1;
+  }
+}
+
+.book-cover {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  position: sticky;
+  top: 104px;
+
+  @media (max-width: 1024px) {
+    grid-row: auto;
+    position: static;
+    max-width: 210px;
+  }
+}
+
+.book-detail {
+  grid-column: 2;
+  min-width: 0;
+
+  @media (max-width: 1024px) {
+    grid-column: 1;
+  }
+}
+
+.detail-byline {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--accent);
+  margin: 0 0 22px;
+  font-variation-settings: 'opsz' 40, 'SOFT' 30, 'WONK' 1;
+}
+
+.detail-stars {
+  color: var(--accent);
+  letter-spacing: 3px;
+  font-size: 17px;
+}
+
+.detail-rating {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 26px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.book-description {
+  max-width: 62ch;
+  margin: 8px 0 34px;
+  line-height: 1.62;
+}
+
+.book-description p {
+  margin: 0 0 1em;
+}
+
+/* Metadata as a two-column definition grid rather than a stack of
+   "Label: value" paragraphs. */
+.detail-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1px;
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+
+.detail-meta > div {
+  padding: 16px 18px 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-meta dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.detail-meta dd {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.add-to-collection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  margin-bottom: 30px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--highlight);
+}
+
+.add-to-collection select {
+  background: var(--bg);
 }

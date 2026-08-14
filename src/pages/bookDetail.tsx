@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getBookById } from "../services/googleBooks";
+import { getBookById, coverUrl } from "../services/googleBooks";
 import { getMyCollections, addBookToCollection } from "../services/collections";
 import type { Book, Collection } from "../types";
 import { useAuth } from "../hooks/useAuth";
+import Cover from "../components/Cover";
+import { BookDetailSkeleton, LoadingAnnouncement } from "../components/Skeleton";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 
 
@@ -17,6 +20,8 @@ export default function BookDetail() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [selectedId, setSelectedId] = useState<string>("");
     const [addStatus, setAddStatus] = useState<string>("");
+
+    useDocumentTitle(book?.title);
 
 
     function renderStars(rating: number) {
@@ -77,20 +82,59 @@ export default function BookDetail() {
     }, [user]);
 
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>{error}</p>;
-    if (!book) return <p>Book not found.</p>;
+    if (loading) {
+        return (
+            <>
+                <LoadingAnnouncement label="Loading book" />
+                <BookDetailSkeleton />
+            </>
+        );
+    }
+    if (error) return <p className="error-text">{error}</p>;
+    if (!book) return <p className="empty-state">Book not found.</p>;
 
-    const cover = book.thumbnail?.replace("http://", "https://").replace("zoom=1", "zoom=2")
+    const cover = coverUrl(book.thumbnail, 3);
+
+    // Only render rows Google actually returned data for — empty "Publisher: "
+    // rows were the main thing making this page look like a debug dump.
+    const meta: [string, React.ReactNode][] = [
+        ["Genres", book.categories?.join(", ")],
+        ["Publisher", book.publisher],
+        ["Published", book.publishedDate],
+        ["Pages", book.pageCount],
+        ["ISBN", book.isbn],
+        ["Language", book.language?.toUpperCase()],
+        ["Format", book.printType],
+    ].filter(([, value]) => value != null && value !== "") as [string, React.ReactNode][];
+
     return (
         <div className="book-detail-container">
-            <h1>
-                {book.title}
-            </h1>
+            {cover && (
+                <div className="detail-backdrop" aria-hidden="true">
+                    <img src={cover} alt="" />
+                </div>
+            )}
+
+            <h1>{book.title}</h1>
+
             <div className="book-cover">
-                {cover && <img src={cover} alt={`${book.title} cover`} />}
+                <Cover src={cover} title={book.title} eager />
             </div>
+
             <div className="book-detail">
+                {book.authors?.length > 0 && (
+                    <p className="detail-byline">{book.authors.join(", ")}</p>
+                )}
+
+                {book.averageRating != null && (
+                    <div className="detail-rating">
+                        <span className="detail-stars">{renderStars(book.averageRating)}</span>
+                        <span>
+                            {book.averageRating.toFixed(1)}
+                            {book.ratingsCount != null && ` · ${book.ratingsCount} ratings`}
+                        </span>
+                    </div>
+                )}
 
                 {user && (
                     <div className="add-to-collection">
@@ -109,26 +153,24 @@ export default function BookDetail() {
                     </div>
                 )}
 
-                <p>Author: {book.authors?.join(", ")}</p>
-                <p>Page Count: {book.pageCount}</p>
-                <p>Average Rating: {book.averageRating && renderStars(book.averageRating)}</p>
+                {book.description && (
+                    <div
+                        className="book-description"
+                        dangerouslySetInnerHTML={{ __html: book.description }}
+                    />
+                )}
 
-                <div className="book-description">
-                    {book.description && <div dangerouslySetInnerHTML={{ __html: book.description }} />}
-                </div>
-
-                <p>Genres: {book.categories?.join(", ")}</p>
-                <p>Publisher: {book.publisher}</p>
-                <p>Published Date: {book.publishedDate}</p>
-                <p>ISBN: {book.isbn}</p>
-                <p>Language: {book.language}</p>
-                <p>Print Type: {book.printType}</p>
-                <p>Ratings Count: {book.ratingsCount}</p>
+                {meta.length > 0 && (
+                    <dl className="detail-meta">
+                        {meta.map(([label, value]) => (
+                            <div key={label}>
+                                <dt>{label}</dt>
+                                <dd>{value}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                )}
             </div>
-
-
         </div>
-
-
     )
 }

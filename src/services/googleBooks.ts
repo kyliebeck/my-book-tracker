@@ -47,6 +47,59 @@ function mapVolumeToBook(volume: GoogleVolume): Book {
     };
 }
 
+/**
+ * Google hands back a ~128px `zoom=1` thumbnail over plain http. That's too
+ * small and too insecure to render directly — upscaling it to grid size looks
+ * blurry. `zoom=2` returns the same image at 300px wide (same aspect ratio,
+ * not a crop), and `edge=curl` bakes a fake page-curl into the corner that
+ * fights a flat cover treatment, so drop it.
+ *
+ * Note this can still return a URL that is not a cover at all — see
+ * components/Cover.tsx for the shape guard that catches those.
+ */
+export function coverUrl(thumbnail?: string, zoom = 2): string | undefined {
+    if (!thumbnail) return undefined;
+    return thumbnail
+        .replace("http://", "https://")
+        .replace(/zoom=\d+/, `zoom=${zoom}`)
+        .replace("&edge=curl", "");
+}
+
+/**
+ * Approximate "popular first" for Google Books results.
+ *
+ * The API has no popularity ordering (`orderBy` takes only `relevance` and
+ * `newest`), and `ratingsCount` is present on well under half of results and
+ * tiny where it exists — sorting on it alone ranks Graceling (114 ratings)
+ * above The Hobbit (12). So this scores metadata completeness instead: a
+ * mainstream commercial edition reliably carries a cover, a description, a
+ * publisher and an ISBN, while the obscure scans that clutter subject queries
+ * carry almost none. Ratings still count, log-scaled, as a tiebreaker.
+ *
+ * This is a proxy for "mainstream", not true popularity — see
+ * services/openLibrary.ts for real readership numbers.
+ */
+export function scorePopularity(book: Book): number {
+    let score = 0;
+    if (book.thumbnail) score += 4;
+    if (book.description) score += 2;
+    if (book.publisher) score += 1;
+    if (book.isbn) score += 1;
+    if (book.pageCount) score += 0.5;
+    if (book.categories?.length) score += 0.5;
+    if (book.ratingsCount) score += Math.log10(1 + book.ratingsCount) * 2;
+    if (book.averageRating) score += book.averageRating * 0.5;
+    return score;
+}
+
+/** Most mainstream-looking first. Stable, so equal scores keep Google's order. */
+export function rankByPopularity(books: Book[]): Book[] {
+    return books
+        .map((book, index) => ({ book, index, score: scorePopularity(book) }))
+        .sort((a, b) => b.score - a.score || a.index - b.index)
+        .map((entry) => entry.book);
+}
+
 export async function searchBooks(query: string): Promise<Book[]> {
     if (!query.trim()) return [];
     const url = `${BASE_URL}?q=${encodeURIComponent(query)}&key=${KEY}`;

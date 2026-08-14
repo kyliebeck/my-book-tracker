@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getCollectionById, getBookIdsForCollection, addBookToCollection } from "../services/collections";
-import { getBookById, searchBooks } from "../services/googleBooks";
+import { getBookById, searchBooks, coverUrl } from "../services/googleBooks";
 import { useAuth } from "../hooks/useAuth";
+import Cover from "../components/Cover";
+import Toast, { type ToastState } from "../components/Toast";
+import { BookGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import type { Book, Collection } from "../types";
 import '../styles/collections.css';
 
@@ -18,6 +22,9 @@ export default function CollectionDetail() {
     const [searchResults, setSearchResults] = useState<Book[]>([]);
     const [searching, setSearching] = useState(false);
     const [searchError, setSearchError] = useState("");
+    const [toast, setToast] = useState<ToastState>(null);
+
+    useDocumentTitle(collection?.name);
 
     useEffect(() => {
         if (!id) return;
@@ -70,16 +77,29 @@ export default function CollectionDetail() {
         try {
             await addBookToCollection(id, bookId);
             const added = searchResults.find((b) => b.id === bookId);
-            if (added) setBooks((prev) => [...prev, added]);
+            if (added) {
+                setBooks((prev) => [...prev, added]);
+                setToast({ message: `Added ${added.title}.` });
+            }
         } catch (err) {
             console.error(err);
-            alert("Could not add — maybe it's already in that collection.");
+            setToast({
+                message: "Couldn't add — it may already be in this collection.",
+                tone: "error",
+            });
         }
     }
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) {
+        return (
+            <>
+                <LoadingAnnouncement label="Loading collection" />
+                <BookGridSkeleton count={8} />
+            </>
+        );
+    }
     if (error) return <p className="error-text">{error}</p>;
-    if (!collection) return <p>Collection not found.</p>;
+    if (!collection) return <p className="empty-state">Collection not found.</p>;
 
     const addedIds = new Set(books.map((b) => b.id));
 
@@ -99,7 +119,7 @@ export default function CollectionDetail() {
                     {books.map((book) => (
                         <li key={book.id} className="book-item">
                             <Link to={`/books/${book.id}`} className="book-link">
-                                {book.thumbnail && <img src={book.thumbnail} alt={book.title} />}
+                                <Cover src={coverUrl(book.thumbnail)} title={book.title} />
                                 <div>
                                     <h2>{book.title}</h2>
                                     <div>{book.authors.join(", ")}</div>
@@ -123,7 +143,12 @@ export default function CollectionDetail() {
                         <button type="submit">Search</button>
                     </form>
 
-                    {searching && <p>Loading...</p>}
+                    {searching && (
+                        <>
+                            <LoadingAnnouncement label="Searching for books" />
+                            <BookGridSkeleton count={5} />
+                        </>
+                    )}
                     {searchError && <p className="error-text">{searchError}</p>}
 
                     <ul className="book-list">
@@ -132,7 +157,7 @@ export default function CollectionDetail() {
                             return (
                                 <li key={book.id} className="book-item">
                                     <Link to={`/books/${book.id}`} className="book-link">
-                                        {book.thumbnail && <img src={book.thumbnail} alt={book.title} />}
+                                        <Cover src={coverUrl(book.thumbnail)} title={book.title} />
                                         <div>
                                             <h2>{book.title}</h2>
                                             <div>{book.authors.join(", ")}</div>
@@ -142,9 +167,11 @@ export default function CollectionDetail() {
                                     </Link>
 
                                     {alreadyAdded ? (
-                                        <span>Added!</span>
+                                        <span>In collection</span>
                                     ) : (
-                                        <button onClick={() => handleAdd(book.id)}>+</button>
+                                        <button onClick={() => handleAdd(book.id)}>
+                                            Add
+                                        </button>
                                     )}
                                 </li>
                             );
@@ -152,6 +179,8 @@ export default function CollectionDetail() {
                     </ul>
                 </div>
             )}
+
+            <Toast toast={toast} onDismiss={() => setToast(null)} />
         </div>
     );
 }

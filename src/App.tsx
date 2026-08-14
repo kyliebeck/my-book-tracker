@@ -6,6 +6,7 @@ import BookDetail from "./pages/bookDetail";
 import Discover from "./pages/discover";
 import Community from "./pages/community";
 import Login from "./pages/login";
+import NotFound from "./pages/notFound";
 import { useAuth } from "./hooks/useAuth";
 import { supabase } from "./lib/supabase";
 
@@ -14,19 +15,19 @@ export default function App() {
 
   return (
     <div>
-      <nav style={{ display: "flex", gap: "1rem", padding: "1rem", alignItems: "center" }}>
+      <nav className="site-nav">
         <Link to="/">Home</Link>
         <Link to="/collections">Collections</Link>
         <Link to="/discover">Discover</Link>
         <Link to="/community">Community</Link>
         {user ? (
-          <button style={{ marginLeft: "auto" }} onClick={() => supabase.auth.signOut()}>Log Out</button>
+          <button className="nav-end" onClick={() => supabase.auth.signOut()}>Log Out</button>
         ) : (
-          <Link style={{ marginLeft: "auto" }} to="/login">Login</Link>
+          <Link className="nav-end" to="/login">Login</Link>
         )}
       </nav>
 
-      <main style={{ padding: "1rem" }}>
+      <main>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/collections" element={<Collections />} />
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/discover" element={<Discover />} />
           <Route path="/community" element={<Community />} />
           <Route path="/login" element={<Login />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>

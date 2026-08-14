@@ -1,66 +1,10 @@
-.community-container {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+/* Card, grid and badge styles live in index.css under `.collection-card`,
+   shared with the Collections page so the two can't drift apart. Empty states
+   use the shared `.empty-state` from index.css for the same reason.
 
-.community-title {
-    font-size: 50px;
-    margin-bottom: 50px;
-}
+   The previous rules referenced --text-primary and --text-secondary, which
+   have never existed in this project's token set (they are --text-h and
+   --text), so those colours silently did nothing.
 
-.community-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    gap: 40px;
-    display: flex;
-    flex-direction: column;
-    align-content: center;
-}
-
-.community-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    align-self: center;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--code-bg);
-    box-shadow: var(--shadow);
-    margin-top: 10px;
-    margin-bottom: 10px;
-    height: 100px;
-    width: 300px;
-
-
-}
-
-
-
-.community-item-title {
-    font-size: 30px;
-    font-weight: bold;
-    color: var(--text-primary);
-    margin-top: 20px;
-}
-
-
-
-.community-item-owner {
-    font-size: 15px;
-    color: var(--text-secondary);
-    margin-top: 5px;
-}
-
-.community-item:hover {
-    background: var(--accent-bg);
-    border-color: var(--accent-border);
-    text-decoration: none;
-    color: var(--text-primary);
-
-}
+   Nothing Community-specific remains; this file is kept as the import target
+   for the page and as the place for any future Community-only styles. */
