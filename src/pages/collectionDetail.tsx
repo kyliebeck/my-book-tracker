@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { getCollectionById, getBookIdsForCollection, addBookToCollection } from "../services/collections";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import {
+    getCollectionById,
+    getBookIdsForCollection,
+    addBookToCollection,
+    removeBookFromCollection,
+    deleteCollection,
+} from "../services/collections";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { getBookById, searchBooks, coverUrl } from "../services/googleBooks";
 import { useAuth } from "../hooks/useAuth";
 import Cover from "../components/Cover";
@@ -23,8 +30,68 @@ export default function CollectionDetail() {
     const [searching, setSearching] = useState(false);
     const [searchError, setSearchError] = useState("");
     const [toast, setToast] = useState<ToastState>(null);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const navigate = useNavigate();
 
     useDocumentTitle(collection?.name);
+
+    /**
+     * Community links to other people's public collections, so a signed-in
+     * visitor can land here without owning the shelf. Editing controls are
+     * gated on ownership — RLS should refuse anyway, but the UI shouldn't
+     * offer an action that's going to be rejected.
+     */
+    const isOwner = Boolean(user && collection && user.id === collection.ownerId);
+
+    async function handleRemoveBook(book: Book) {
+        if (!id) return;
+        // Optimistic: drop it from the list immediately, restore if the call fails.
+        setBooks((prev) => prev.filter((b) => b.id !== book.id));
+        try {
+            await removeBookFromCollection(id, book.id);
+            setToast({
+                message: `Removed ${book.title}.`,
+                action: {
+                    label: "Undo",
+                    onAction: async () => {
+                        try {
+                            await addBookToCollection(id, book.id);
+                            setBooks((prev) =>
+                                prev.some((b) => b.id === book.id) ? prev : [...prev, book]
+                            );
+                        } catch (err) {
+                            console.error(err);
+                            setToast({ message: "Couldn't undo that.", tone: "error" });
+                        }
+                    },
+                },
+            });
+        } catch (err) {
+            console.error(err);
+            setBooks((prev) =>
+                prev.some((b) => b.id === book.id) ? prev : [...prev, book]
+            );
+            setToast({ message: "Couldn't remove that book.", tone: "error" });
+        }
+    }
+
+    async function handleDeleteCollection() {
+        if (!id) return;
+        setDeleting(true);
+        try {
+            await deleteCollection(id);
+            navigate("/collections", {
+                replace: true,
+                state: { deleted: collection?.name },
+            });
+        } catch (err) {
+            console.error(err);
+            setDeleting(false);
+            setConfirmingDelete(false);
+            setToast({ message: "Couldn't delete this collection.", tone: "error" });
+        }
+    }
 
     useEffect(() => {
         if (!id) return;
@@ -105,19 +172,55 @@ export default function CollectionDetail() {
 
     return (
         <div>
+            <Link className="back-link" to="/collections">
+                ← Back to Collections
+            </Link>
+
             <h1>
                 {collection.name}
                 {collection.isPublic && <span className="collection-badge">Public</span>}
             </h1>
-            <p>{collection.description}</p>
-            <Link to="/collections">Back to Collections</Link>
+            {collection.description && <p>{collection.description}</p>}
+
+            <div className="detail-toolbar">
+                <span className="detail-count">
+                    {books.length} {books.length === 1 ? "book" : "books"}
+                </span>
+                {isOwner && (
+                    <button
+                        type="button"
+                        className="btn-danger-quiet"
+                        onClick={() => setConfirmingDelete(true)}
+                    >
+                        Delete collection
+                    </button>
+                )}
+            </div>
 
             {books.length === 0 ? (
-                <p>No books in this collection yet.</p>
+                <div className="empty-state">
+                    <strong>Nothing on this shelf yet</strong>
+                    {isOwner
+                        ? "Search below to add your first book."
+                        : "The owner hasn't added any books."}
+                </div>
             ) : (
                 <ul className="book-list">
                     {books.map((book) => (
-                        <li key={book.id} className="book-item">
+                        <li
+                            key={book.id}
+                            className={`book-item${isOwner ? " book-item-removable" : ""}`}
+                        >
+                            {isOwner && (
+                                <button
+                                    type="button"
+                                    className="book-remove"
+                                    aria-label={`Remove ${book.title} from this collection`}
+                                    onClick={() => handleRemoveBook(book)}
+                                >
+                                    ×
+                                </button>
+                            )}
                             <Link to={`/books/${book.id}`} className="book-link">
                                 <Cover src={coverUrl(book.thumbnail)} title={book.title} />
                                 <div>
@@ -131,7 +234,7 @@ export default function CollectionDetail() {
                 </ul>
             )}
 
-            {user && (
+            {isOwner && (
                 <div className="add-book-section">
                     <h2>Add a book</h2>
                     <form className="add-book-form" onSubmit={handleSearch}>
@@ -179,6 +282,16 @@ export default function CollectionDetail() {
                     </ul>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmingDelete}
+                title="Delete this collection?"
+                body={`"${collection.name}" and its ${books.length} ${books.length === 1 ? "book" : "books"} will be removed. This can't be undone.`}
+                confirmLabel="Delete collection"
+                busy={deleting}
+                onConfirm={handleDeleteCollection}
+                onCancel={() => !deleting && setConfirmingDelete(false)}
+            />
 
             <Toast toast={toast} onDismiss={() => setToast(null)} />
         </div>

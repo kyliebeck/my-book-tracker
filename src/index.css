@@ -1245,6 +1245,30 @@ h1 .collection-badge {
   border-color: var(--error);
 }
 
+.toast-action {
+  margin-left: auto;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+}
+
+.toast-action:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a120a;
+}
+
+/* With an action present the × no longer needs the auto margin. */
+.toast-action + .toast-dismiss {
+  margin-left: 0;
+}
+
 .toast-dismiss {
   margin-left: auto;
   padding: 2px 7px;
@@ -1272,6 +1296,174 @@ h1 .collection-badge {
   .toast {
     animation: none;
   }
+}
+
+/* ---------- collection detail header ---------- */
+
+.back-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text);
+}
+
+.back-link:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.detail-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-count {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+/* ---------- destructive actions ---------- */
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 13px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--error);
+  border: 1px solid var(--error);
+  color: #1a0d0a;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.btn-danger:hover {
+  background: #ee9d85;
+  border-color: #ee9d85;
+}
+
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Quiet text button for the destructive action on a page — deliberately not
+   loud, so it isn't the thing your eye lands on first. */
+.btn-danger-quiet {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-danger-quiet:hover {
+  border-color: var(--error);
+  background: rgba(224, 138, 112, 0.12);
+  color: var(--error);
+}
+
+/* Remove-from-collection control, pinned to the corner of a cover. */
+.book-remove {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(14, 10, 7, 0.82);
+  backdrop-filter: blur(6px);
+  color: var(--text-h);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.book-item:hover .book-remove,
+.book-remove:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.book-remove:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: #1a0d0a;
+}
+
+/* The cover is the positioning context for the remove button. */
+.book-item-removable {
+  position: relative;
+}
+
+/* Touch devices have no hover, so the control must always be visible. */
+@media (hover: none) {
+  .book-remove {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.confirm {
+  width: min(440px, calc(100vw - 40px));
+  padding: 30px 30px 26px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background:
+    linear-gradient(150deg, rgba(217, 166, 104, 0.05), transparent 55%),
+    var(--surface);
+  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.9), var(--highlight);
+  color: var(--text);
+}
+
+.confirm::backdrop {
+  background: rgba(8, 6, 4, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.confirm-title {
+  font-size: 25px;
+  margin: 0 0 10px;
+}
+
+.confirm-body {
+  font-size: 15px;
+  line-height: 1.55;
+  margin-bottom: 26px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* ---------- auth ---------- */

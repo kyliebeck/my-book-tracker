@@ -8,7 +8,9 @@ import {
 
 import type { Collection } from "../types";
 import { CollectionGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
+import { useLocation } from "react-router-dom";
 import CollectionCard from "../components/CollectionCard";
+import Toast, { type ToastState } from "../components/Toast";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import useScrollReveal from "../hooks/useScrollReveal";
 import useCollectionCovers from "../hooks/useCollectionCovers";
@@ -22,6 +24,23 @@ export default function Collections() {
     const [isPublic, setIsPublic] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    // Deleting navigates back here; confirm it happened rather than silently
+    // showing a shorter list.
+    const location = useLocation();
+    const [toast, setToast] = useState<ToastState>(
+        (location.state as { deleted?: string } | null)?.deleted
+            ? { message: `Deleted "${(location.state as { deleted: string }).deleted}".` }
+            : null
+    );
+
+    // Clear the router state once consumed, or reloading this page would
+    // replay "Deleted …" for a deletion that already happened.
+    useEffect(() => {
+        if ((location.state as { deleted?: string } | null)?.deleted) {
+            window.history.replaceState({}, "");
+        }
+    }, [location.state]);
 
     useDocumentTitle("My Collections");
 
@@ -148,6 +167,8 @@ export default function Collections() {
                     </li>
                 ))}
             </ul>
+
+            <Toast toast={toast} onDismiss={() => setToast(null)} />
         </div>
     );
 }
