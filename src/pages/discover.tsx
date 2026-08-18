@@ -163,7 +163,7 @@ export default function Discover() {
                                     e.target.value = "";
                                 }}
                             >
-                                <option value="" disabled>Add to collection…</option>
+                                <option value="" disabled>Add to a shelf…</option>
                                 {collections.map((c) => (
                                     <option key={c.id} value={c.id}>{c.name}</option>
                                 ))}

@@ -73,7 +73,7 @@ export default function Community() {
 
             {loading && (
                 <>
-                    <LoadingAnnouncement label="Loading public collections" />
+                    <LoadingAnnouncement label="Loading public shelves" />
                     <CollectionGridSkeleton />
                 </>
             )}

@@ -22,13 +22,13 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true" />
           Nightstand
         </Link>
-        <Link to="/collections">Collections</Link>
+        <Link to="/collections">Shelves</Link>
         <Link to="/discover">Discover</Link>
         <Link to="/community">Community</Link>
         {user ? (
-          <button className="nav-end" onClick={() => supabase.auth.signOut()}>Log Out</button>
+          <button className="nav-end" onClick={() => supabase.auth.signOut()}>Log out</button>
         ) : (
-          <Link className="nav-end" to="/login">Login</Link>
+          <Link className="nav-end" to="/login">Log in</Link>
         )}
       </nav>
 

@@ -42,7 +42,7 @@ export default function Collections() {
         }
     }, [location.state]);
 
-    useDocumentTitle("My Collections");
+    useDocumentTitle("Your shelves");
 
     useScrollReveal(collections);
     const covers = useCollectionCovers(collections.map((c) => c.id));
@@ -78,7 +78,7 @@ export default function Collections() {
             } catch (err) {
                 if (ignore) return;
                 console.error(err);
-                setError("Could not load collections.");
+                setError("Couldn't load your shelves.");
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -118,7 +118,7 @@ export default function Collections() {
     return (
         <div className="collections-container">
             <p className="eyebrow">Yours</p>
-            <h1>My Collections</h1>
+            <h1>Shelves</h1>
 
             <form className="collection-form" onSubmit={handleCreate}>
                 <input
@@ -140,7 +140,7 @@ export default function Collections() {
 
             {loading && (
                 <>
-                    <LoadingAnnouncement label="Loading collections" />
+                    <LoadingAnnouncement label="Loading your shelves" />
                     <CollectionGridSkeleton />
                 </>
             )}

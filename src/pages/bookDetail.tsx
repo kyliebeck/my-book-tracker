@@ -36,10 +36,10 @@ export default function BookDetail() {
         if (!selectedId || !id) return;          // nothing chosen → bail
         try {
             await addBookToCollection(selectedId, id);   // collection first, book second
-            setAddStatus("Added ✓");
+            setAddStatus("Added.");
         } catch (err) {
             console.error(err);
-            setAddStatus("Could not add — maybe it's already there.");
+            setAddStatus("It's already on that shelf.");
         }
     }
 
@@ -139,7 +139,7 @@ export default function BookDetail() {
                 {user && (
                     <div className="add-to-collection">
                         <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
-                            <option value="">Choose a collection…</option>
+                            <option value="">Choose a shelf…</option>
                             {collections.map((col) => (
                                 <option key={col.id} value={col.id}>
                                     {col.name}
@@ -147,7 +147,7 @@ export default function BookDetail() {
                             ))}
                         </select>
                         <button onClick={handleAddToCollection} disabled={!selectedId}>
-                            Add to collection
+                            Add to shelf
                         </button>
                         {addStatus && <p>{addStatus}</p>}
                     </div>

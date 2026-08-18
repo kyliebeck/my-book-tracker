@@ -133,7 +133,7 @@ export default function CollectionDetail() {
             setSearchResults(results);
         } catch (err) {
             console.error(err);
-            setSearchError("Something went wrong. Try again.");
+            setSearchError("That search didn't work. Try again.");
         } finally {
             setSearching(false);
         }
@@ -160,7 +160,7 @@ export default function CollectionDetail() {
     if (loading) {
         return (
             <>
-                <LoadingAnnouncement label="Loading collection" />
+                <LoadingAnnouncement label="Loading shelf" />
                 <BookGridSkeleton count={8} />
             </>
         );
@@ -173,7 +173,7 @@ export default function CollectionDetail() {
     return (
         <div>
             <Link className="back-link" to="/collections">
-                ← Back to Collections
+                ← All shelves
             </Link>
 
             <h1>
@@ -215,7 +215,7 @@ export default function CollectionDetail() {
                                 <button
                                     type="button"
                                     className="book-remove"
-                                    aria-label={`Remove ${book.title} from this collection`}
+                                    aria-label={`Remove ${book.title} from this shelf`}
                                     onClick={() => handleRemoveBook(book)}
                                 >
                                     ×
