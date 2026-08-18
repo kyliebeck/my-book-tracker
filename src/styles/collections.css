@@ -96,7 +96,10 @@
     color: var(--text);
 }
 
-.book-item span {
+/* Scoped to a class, not `.book-item span`. That descendant selector matched
+   every span in the card — including the finished marker inside the cover,
+   which it repainted brass-on-brass and made invisible. */
+.book-status {
     align-self: flex-start;
     font-size: 12px;
     font-weight: 600;

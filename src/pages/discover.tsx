@@ -6,6 +6,7 @@ import Toast, { type ToastState } from "../components/Toast";
 import { BookGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import useScrollReveal from "../hooks/useScrollReveal";
+import useFinishedIds from "../hooks/useFinishedIds";
 import type { Book } from "../types";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -38,6 +39,8 @@ export default function Discover() {
     useDocumentTitle(activeGenre ? `${activeGenre} books` : "Discover");
 
     useScrollReveal(books);
+    const { user } = useAuth();
+    const finishedIds = useFinishedIds(books.map((b) => b.id), Boolean(user));
 
     async function handleSearch(e: React.FormEvent) {
         e.preventDefault();
@@ -73,7 +76,6 @@ export default function Discover() {
         }
     }
 
-    const { user } = useAuth();
     const [collections, setCollections] = useState<CollectionRow[]>([]);
 
     useEffect(() => {
@@ -149,7 +151,11 @@ export default function Discover() {
                 {books.map((book) => (
                     <li key={book.id} className="book-item">
                         <Link to={`/books/${book.id}`} className="book-link">
-                            <Cover src={coverUrl(book.thumbnail)} title={book.title} />
+                            <Cover
+                                src={coverUrl(book.thumbnail)}
+                                title={book.title}
+                                finished={finishedIds.has(book.id)}
+                            />
                             <div>
                                 <strong>{book.title}</strong>
                                 <div>{book.authors.join(", ")}</div>

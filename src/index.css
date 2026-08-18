@@ -587,6 +587,45 @@ h1 em {
     linear-gradient(to top, rgba(0, 0, 0, 0.25), transparent 45%);
 }
 
+/* Finished marker. Sits above the sheen (z-index 2) and the spine gradient, and
+   carries its own dark ring so it stays readable on a pale cover. */
+.cover-finished {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #1a120a;
+  box-shadow:
+    0 0 0 2px rgba(14, 10, 7, 0.72),
+    0 3px 8px rgba(0, 0, 0, 0.6);
+}
+
+.cover-finished svg {
+  width: 14px;
+  height: 14px;
+}
+
+.shelf-item .cover-finished,
+.card-spine .cover-finished {
+  width: 19px;
+  height: 19px;
+  top: 5px;
+  right: 5px;
+}
+
+.shelf-item .cover-finished svg,
+.card-spine .cover-finished svg {
+  width: 11px;
+  height: 11px;
+}
+
 /* Fallback tile when Google has no cover for a volume — which is most of them
    for older titles, so this is a common case, not an edge case. Styled as a
    blind-stamped clothbound board rather than a grey placeholder. */
@@ -1127,6 +1166,13 @@ h1 em {
   letter-spacing: 0.16em;
   color: var(--text);
   opacity: 0.7;
+}
+
+/* Reading progress reads as an achievement, so it takes the accent colour
+   rather than the muted tone the plain book count uses. */
+.collection-card-progress {
+  color: var(--accent);
+  opacity: 1;
 }
 
 .collection-card-owner {
@@ -1836,6 +1882,71 @@ h1 .collection-badge {
   margin: 0;
   font-size: 15px;
   color: var(--text-h);
+}
+
+/* "Finished" toggle on book detail. Sized like a primary control rather than a
+   form checkbox, since it's the main thing you come back to a book to do. */
+.finished-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 18px;
+  padding: 12px 20px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--highlight);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.finished-toggle:hover {
+  border-color: var(--accent-border);
+  background: var(--surface-2);
+}
+
+.finished-toggle input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.finished-toggle:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.finished-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text);
+}
+
+.finished-toggle.is-finished {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  box-shadow: var(--glow), var(--highlight);
+}
+
+.finished-toggle.is-finished .finished-label {
+  color: var(--accent);
+}
+
+.finished-date {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.8;
+  font-variation-settings: 'opsz' 20, 'SOFT' 30, 'WONK' 1;
 }
 
 .add-to-collection {

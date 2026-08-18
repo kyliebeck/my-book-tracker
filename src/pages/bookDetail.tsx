@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getBookById, coverUrl } from "../services/googleBooks";
 import { getMyCollections, addBookToCollection } from "../services/collections";
+import { getFinishedAt, markFinished, unmarkFinished } from "../services/readBooks";
+import Toast, { type ToastState } from "../components/Toast";
 import type { Book, Collection } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import Cover from "../components/Cover";
@@ -20,8 +22,42 @@ export default function BookDetail() {
     const [collections, setCollections] = useState<Collection[]>([]);
     const [selectedId, setSelectedId] = useState<string>("");
     const [addStatus, setAddStatus] = useState<string>("");
+    const [finishedAt, setFinishedAt] = useState<string | null>(null);
+    const [toast, setToast] = useState<ToastState>(null);
 
     useDocumentTitle(book?.title);
+
+    // Whether this book is already marked finished. Only meaningful signed in;
+    // RLS scopes the row to the current user.
+    useEffect(() => {
+        // No reset for the signed-out case: the toggle isn't rendered then, so
+        // there's no stale state to show.
+        if (!id || !user) return;
+        let ignore = false;
+        getFinishedAt(id)
+            .then((at) => {
+                if (!ignore) setFinishedAt(at);
+            })
+            .catch(console.error);
+        return () => {
+            ignore = true;
+        };
+    }, [id, user]);
+
+    async function toggleFinished(next: boolean) {
+        if (!id) return;
+        const previous = finishedAt;
+        // Optimistic: the checkbox should respond instantly.
+        setFinishedAt(next ? new Date().toISOString() : null);
+        try {
+            if (next) await markFinished(id);
+            else await unmarkFinished(id);
+        } catch (err) {
+            console.error(err);
+            setFinishedAt(previous);
+            setToast({ message: "Couldn't save that. Try again.", tone: "error" });
+        }
+    }
 
 
     function renderStars(rating: number) {
@@ -137,6 +173,28 @@ export default function BookDetail() {
                 )}
 
                 {user && (
+                    <label className={`finished-toggle${finishedAt ? " is-finished" : ""}`}>
+                        <input
+                            type="checkbox"
+                            checked={Boolean(finishedAt)}
+                            onChange={(e) => toggleFinished(e.target.checked)}
+                        />
+                        <span className="finished-label">
+                            {finishedAt ? "Finished" : "Mark as finished"}
+                        </span>
+                        {finishedAt && (
+                            <span className="finished-date">
+                                {new Date(finishedAt).toLocaleDateString(undefined, {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                })}
+                            </span>
+                        )}
+                    </label>
+                )}
+
+                {user && (
                     <div className="add-to-collection">
                         <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
                             <option value="">Choose a shelf…</option>
@@ -171,6 +229,8 @@ export default function BookDetail() {
                     </dl>
                 )}
             </div>
+
+            <Toast toast={toast} onDismiss={() => setToast(null)} />
         </div>
     )
 }

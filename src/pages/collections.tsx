@@ -3,7 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import {
     getMyCollections,
     createCollection,
-    getBookCountsByCollection,
+    getShelfStats,
 } from "../services/collections";
 
 import type { Collection } from "../types";
@@ -19,7 +19,7 @@ import '../styles/collections.css';
 export default function Collections() {
     const { user, loading: authLoading } = useAuth();
     const [collections, setCollections] = useState<Collection[]>([]);
-    const [counts, setCounts] = useState<Record<string, number>>({});
+    const [stats, setStats] = useState<Record<string, { total: number; finished: number }>>({});
     const [name, setName] = useState("");
     const [isPublic, setIsPublic] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ export default function Collections() {
         try {
             const data = await getMyCollections();
             setCollections(data);
-            setCounts(await getBookCountsByCollection(data.map((c) => c.id)));
+            setStats(await getShelfStats(data.map((c) => c.id)));
             setError("");
         } catch (err) {
             console.error(err);
@@ -68,12 +68,10 @@ export default function Collections() {
         (async () => {
             try {
                 const data = await getMyCollections();
-                const bookCounts = await getBookCountsByCollection(
-                    data.map((c) => c.id)
-                );
+                const shelfStats = await getShelfStats(data.map((c) => c.id));
                 if (ignore) return;
                 setCollections(data);
-                setCounts(bookCounts);
+                setStats(shelfStats);
                 setError("");
             } catch (err) {
                 if (ignore) return;
@@ -159,7 +157,8 @@ export default function Collections() {
                         <CollectionCard
                             id={c.id}
                             name={c.name}
-                            count={counts[c.id] ?? 0}
+                            count={stats[c.id]?.total ?? 0}
+                            readCount={stats[c.id]?.finished}
                             covers={covers[c.id]}
                             isPublic={c.isPublic}
                         />

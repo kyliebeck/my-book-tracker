@@ -14,6 +14,7 @@ import Cover from "../components/Cover";
 import Toast, { type ToastState } from "../components/Toast";
 import { BookGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
 import useDocumentTitle from "../hooks/useDocumentTitle";
+import useFinishedIds from "../hooks/useFinishedIds";
 import type { Book, Collection } from "../types";
 import '../styles/collections.css';
 
@@ -35,6 +36,12 @@ export default function CollectionDetail() {
     const navigate = useNavigate();
 
     useDocumentTitle(collection?.name);
+
+    // Markers cover both the shelf itself and the add-a-book results below it.
+    const finishedIds = useFinishedIds(
+        [...books, ...searchResults].map((b) => b.id),
+        Boolean(user)
+    );
 
     /**
      * Community links to other people's public collections, so a signed-in
@@ -222,7 +229,11 @@ export default function CollectionDetail() {
                                 </button>
                             )}
                             <Link to={`/books/${book.id}`} className="book-link">
-                                <Cover src={coverUrl(book.thumbnail)} title={book.title} />
+                                <Cover
+                                    src={coverUrl(book.thumbnail)}
+                                    title={book.title}
+                                    finished={finishedIds.has(book.id)}
+                                />
                                 <div>
                                     <h2>{book.title}</h2>
                                     <div>{book.authors.join(", ")}</div>
@@ -260,7 +271,11 @@ export default function CollectionDetail() {
                             return (
                                 <li key={book.id} className="book-item">
                                     <Link to={`/books/${book.id}`} className="book-link">
-                                        <Cover src={coverUrl(book.thumbnail)} title={book.title} />
+                                        <Cover
+                                    src={coverUrl(book.thumbnail)}
+                                    title={book.title}
+                                    finished={finishedIds.has(book.id)}
+                                />
                                         <div>
                                             <h2>{book.title}</h2>
                                             <div>{book.authors.join(", ")}</div>
@@ -270,7 +285,7 @@ export default function CollectionDetail() {
                                     </Link>
 
                                     {alreadyAdded ? (
-                                        <span>On the shelf</span>
+                                        <span className="book-status">On the shelf</span>
                                     ) : (
                                         <button onClick={() => handleAdd(book.id)}>
                                             Add

@@ -35,14 +35,44 @@ type Props = {
     /** Decorative covers (the home shelf) get no alt text and no fallback label. */
     decorative?: boolean;
     eager?: boolean;
+    /** Shows a brass check in the corner when you've finished this book. */
+    finished?: boolean;
 };
 
-export default function Cover({ src, title, decorative = false, eager = false }: Props) {
+/** Corner check. Not aria-hidden: "finished" isn't conveyable any other way here. */
+function FinishedMark({ title }: { title: string }) {
+    return (
+        <span className="cover-finished" title={`You finished ${title}`}>
+            <span className="visually-hidden">Finished</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                    d="M4 12.5l5.5 5.5L20 7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        </span>
+    );
+}
+
+export default function Cover({
+    src,
+    title,
+    decorative = false,
+    eager = false,
+    finished = false,
+}: Props) {
     const [unusable, setUnusable] = useState(false);
 
     if (!src || unusable) {
         return (
-            <div className="cover cover-empty">{decorative ? null : title}</div>
+            <div className="cover cover-empty">
+                {decorative ? null : title}
+                {finished && <FinishedMark title={title} />}
+            </div>
         );
     }
 
@@ -58,6 +88,7 @@ export default function Cover({ src, title, decorative = false, eager = false }:
                     if (!isCoverShaped(w, h)) setUnusable(true);
                 }}
             />
+            {finished && <FinishedMark title={title} />}
         </div>
     );
 }

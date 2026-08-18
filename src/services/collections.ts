@@ -97,6 +97,46 @@ export async function getPreviewBookIds(
     return previews;
 }
 
+/**
+ * Total and finished book counts per shelf, for the "x of y read" line.
+ *
+ * Two round trips regardless of how many shelves are on screen: one for the
+ * shelf/book pairs, one for which of those books you've finished. read_books
+ * is RLS-scoped to you, so the finished side is always your own progress, even
+ * when the shelf belongs to someone else.
+ */
+export async function getShelfStats(
+    collectionIds: string[]
+): Promise<Record<string, { total: number; finished: number }>> {
+    const stats: Record<string, { total: number; finished: number }> = {};
+    for (const id of collectionIds) stats[id] = { total: 0, finished: 0 };
+    if (collectionIds.length === 0) return stats;
+
+    const { data: pairs, error } = await supabase
+        .from("collection_books")
+        .select("collection_id, book_id")
+        .in("collection_id", collectionIds);
+    if (error) throw error;
+
+    const rows = pairs ?? [];
+    for (const row of rows) stats[row.collection_id].total += 1;
+
+    const bookIds = [...new Set(rows.map((r) => r.book_id as string))];
+    if (bookIds.length === 0) return stats;
+
+    const { data: read, error: readError } = await supabase
+        .from("read_books")
+        .select("book_id")
+        .in("book_id", bookIds);
+    if (readError) throw readError;
+
+    const finished = new Set((read ?? []).map((r) => r.book_id as string));
+    for (const row of rows) {
+        if (finished.has(row.book_id)) stats[row.collection_id].finished += 1;
+    }
+    return stats;
+}
+
 export async function getCollectionById(collectionId: string): Promise<Collection> {
     const { data, error } = await supabase
         .from("collections")
