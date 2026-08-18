@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { getBookById, coverUrl } from "../services/googleBooks";
-import { getMyCollections, addBookToCollection } from "../services/collections";
+import {
+    getMyCollections,
+    addBookToCollection,
+    getShelfIdsContainingBook,
+} from "../services/collections";
 import { getFinishedAt, markFinished, unmarkFinished } from "../services/readBooks";
 import Toast, { type ToastState } from "../components/Toast";
 import type { Book, Collection } from "../types";
@@ -21,11 +25,27 @@ export default function BookDetail() {
     const [error, setError] = useState<string | null>(null);
     const [collections, setCollections] = useState<Collection[]>([]);
     const [selectedId, setSelectedId] = useState<string>("");
-    const [addStatus, setAddStatus] = useState<string>("");
+    const [shelfIds, setShelfIds] = useState<string[]>([]);
     const [finishedAt, setFinishedAt] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastState>(null);
 
     useDocumentTitle(book?.title);
+
+    // Which of my shelves already hold this book. Runs once collections arrive;
+    // the array is a new reference each render, so key on the ids themselves.
+    const myShelfKey = collections.map((c) => c.id).join(",");
+    useEffect(() => {
+        if (!id || !user || !myShelfKey) return;
+        let ignore = false;
+        getShelfIdsContainingBook(id, myShelfKey.split(","))
+            .then((ids) => {
+                if (!ignore) setShelfIds(ids);
+            })
+            .catch(console.error);
+        return () => {
+            ignore = true;
+        };
+    }, [id, user, myShelfKey]);
 
     // Whether this book is already marked finished. Only meaningful signed in;
     // RLS scopes the row to the current user.
@@ -72,10 +92,14 @@ export default function BookDetail() {
         if (!selectedId || !id) return;          // nothing chosen → bail
         try {
             await addBookToCollection(selectedId, id);   // collection first, book second
-            setAddStatus("Added.");
+            // Swaps the picker for the "In … shelf" line, which is the feedback.
+            setShelfIds((prev) =>
+                prev.includes(selectedId) ? prev : [...prev, selectedId]
+            );
+            setSelectedId("");
         } catch (err) {
             console.error(err);
-            setAddStatus("It's already on that shelf.");
+            setToast({ message: "It's already on that shelf.", tone: "error" });
         }
     }
 
@@ -130,6 +154,7 @@ export default function BookDetail() {
     if (!book) return <p className="empty-state">Can't find that book.</p>;
 
     const cover = coverUrl(book.thumbnail, 3);
+    const shelvesWithBook = collections.filter((c) => shelfIds.includes(c.id));
 
     // Only render rows Google actually returned data for — empty "Publisher: "
     // rows were the main thing making this page look like a debug dump.
@@ -172,7 +197,13 @@ export default function BookDetail() {
                     </div>
                 )}
 
-                {user && (
+                {/* Only for books on one of your own shelves. Reaching this page
+                    from someone else's public shelf shouldn't offer to log it as
+                    read — that's a control over your library, and this book isn't
+                    in it yet. Deliberately based on shelf membership rather than
+                    which page you came from, so it survives a refresh or a
+                    pasted link. */}
+                {user && shelvesWithBook.length > 0 && (
                     <label className={`finished-toggle${finishedAt ? " is-finished" : ""}`}>
                         <input
                             type="checkbox"
@@ -194,7 +225,21 @@ export default function BookDetail() {
                     </label>
                 )}
 
-                {user && (
+                {user && shelvesWithBook.length > 0 && (
+                    <p className="in-shelf">
+                        In{" "}
+                        {shelvesWithBook.map((shelf, i) => (
+                            <span key={shelf.id}>
+                                {i > 0 &&
+                                    (i === shelvesWithBook.length - 1 ? " and " : ", ")}
+                                <Link to={`/collections/${shelf.id}`}>{shelf.name}</Link>
+                            </span>
+                        ))}{" "}
+                        {shelvesWithBook.length === 1 ? "shelf" : "shelves"}
+                    </p>
+                )}
+
+                {user && shelvesWithBook.length === 0 && collections.length > 0 && (
                     <div className="add-to-collection">
                         <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
                             <option value="">Choose a shelf…</option>
@@ -207,7 +252,6 @@ export default function BookDetail() {
                         <button onClick={handleAddToCollection} disabled={!selectedId}>
                             Add to shelf
                         </button>
-                        {addStatus && <p>{addStatus}</p>}
                     </div>
                 )}
 

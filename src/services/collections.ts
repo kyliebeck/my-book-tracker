@@ -137,6 +137,27 @@ export async function getShelfStats(
     return stats;
 }
 
+/**
+ * Which of the given shelves already hold this book.
+ *
+ * Deliberately constrained to ids you pass in. RLS on collection_books lets you
+ * read rows for any shelf you can see, which includes other people's public
+ * ones — querying by book_id alone would report strangers' shelves as yours.
+ */
+export async function getShelfIdsContainingBook(
+    bookId: string,
+    collectionIds: string[]
+): Promise<string[]> {
+    if (collectionIds.length === 0) return [];
+    const { data, error } = await supabase
+        .from("collection_books")
+        .select("collection_id")
+        .eq("book_id", bookId)
+        .in("collection_id", collectionIds);
+    if (error) throw error;
+    return (data ?? []).map((row) => row.collection_id as string);
+}
+
 export async function getCollectionById(collectionId: string): Promise<Collection> {
     const { data, error } = await supabase
         .from("collections")

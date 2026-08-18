@@ -1949,6 +1949,39 @@ h1 .collection-badge {
   font-variation-settings: 'opsz' 20, 'SOFT' 30, 'WONK' 1;
 }
 
+/* Replaces the shelf picker once a book is already on one of your shelves.
+   The shelf names are links, so this is a way back to the shelf too. */
+/* Block, not flex: flex would make each text fragment its own item and the gap
+   would insert a space before the commas ("Sci-Fi , To Read"). This is a
+   sentence, so let it lay out as one. */
+.in-shelf {
+  display: block;
+  line-height: 1.9;
+  margin-bottom: 30px;
+  padding: 14px 20px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-border);
+  border-radius: 4px 8px 8px 4px;
+  background: var(--surface);
+  box-shadow: var(--highlight);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.in-shelf a {
+  font-family: var(--heading);
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variation-settings: 'opsz' 24, 'SOFT' 30, 'WONK' 1;
+}
+
+.in-shelf a:hover {
+  color: var(--text-h);
+  text-decoration: none;
+}
+
 .add-to-collection {
   display: flex;
   flex-wrap: wrap;
