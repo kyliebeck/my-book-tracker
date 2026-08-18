@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 
@@ -11,6 +12,7 @@ export default function Login() {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
     const [busy, setBusy] = useState(false);
+    const navigate = useNavigate();
 
     useDocumentTitle(mode === "signin" ? "Sign in" : "Create an account");
 
@@ -19,27 +21,38 @@ export default function Login() {
         if (!email.trim() || !password) return;
         setBusy(true);
         setMessage("");
+        // Navigating unmounts this component, so skip the trailing setBusy.
+        let leaving = false;
         try {
-            const { error } =
+            const { data, error } =
                 mode === "signup"
                     ? await supabase.auth.signUp({ email, password })
                     : await supabase.auth.signInWithPassword({ email, password });
 
-            setIsError(Boolean(error));
-            setMessage(
-                error
-                    ? error.message
-                    : mode === "signup"
-                        ? "Account created — you can sign in now."
-                        : "Signed in."
-            );
-            if (!error && mode === "signup") setMode("signin");
+            if (error) {
+                setIsError(true);
+                setMessage(error.message);
+                return;
+            }
+
+            // Signing up only returns a session when email confirmation is
+            // disabled; with it on, there's nothing to redirect into yet.
+            if (data.session) {
+                leaving = true;
+                // replace, so Back doesn't return to the sign-in form.
+                navigate("/", { replace: true });
+                return;
+            }
+
+            setIsError(false);
+            setMessage("Account made. Check your email, then sign in.");
+            setMode("signin");
         } catch (err) {
             console.error(err);
             setIsError(true);
-            setMessage("Something went wrong. Try again.");
+            setMessage("That didn't work. Try again.");
         } finally {
-            setBusy(false);
+            if (!leaving) setBusy(false);
         }
     }
 
@@ -52,8 +65,8 @@ export default function Login() {
                 <h1>{isSignUp ? "Create an account" : "Sign in"}</h1>
                 <p className="auth-lede">
                     {isSignUp
-                        ? "Start building shelves and share them with other readers."
-                        : "Pick up where you left off."}
+                        ? "For the books you're reading, and the ones you keep meaning to start."
+                        : "Your shelves are where you left them."}
                 </p>
 
                 <form className="auth-form" onSubmit={handleSubmit}>

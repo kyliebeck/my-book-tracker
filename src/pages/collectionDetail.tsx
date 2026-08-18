@@ -72,7 +72,7 @@ export default function CollectionDetail() {
             setBooks((prev) =>
                 prev.some((b) => b.id === book.id) ? prev : [...prev, book]
             );
-            setToast({ message: "Couldn't remove that book.", tone: "error" });
+            setToast({ message: "Couldn't remove it.", tone: "error" });
         }
     }
 
@@ -89,7 +89,7 @@ export default function CollectionDetail() {
             console.error(err);
             setDeleting(false);
             setConfirmingDelete(false);
-            setToast({ message: "Couldn't delete this collection.", tone: "error" });
+            setToast({ message: "Couldn't delete that shelf.", tone: "error" });
         }
     }
 
@@ -114,7 +114,7 @@ export default function CollectionDetail() {
             } catch (err) {
                 if (ignore) return;
                 console.error(err);
-                setError("Could not load collection.");
+                setError("Couldn't load that shelf.");
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -151,7 +151,7 @@ export default function CollectionDetail() {
         } catch (err) {
             console.error(err);
             setToast({
-                message: "Couldn't add — it may already be in this collection.",
+                message: "It's already on this shelf.",
                 tone: "error",
             });
         }
@@ -166,7 +166,7 @@ export default function CollectionDetail() {
         );
     }
     if (error) return <p className="error-text">{error}</p>;
-    if (!collection) return <p className="empty-state">Collection not found.</p>;
+    if (!collection) return <p className="empty-state">Can't find that shelf.</p>;
 
     const addedIds = new Set(books.map((b) => b.id));
 
@@ -192,17 +192,17 @@ export default function CollectionDetail() {
                         className="btn-danger-quiet"
                         onClick={() => setConfirmingDelete(true)}
                     >
-                        Delete collection
+                        Delete shelf
                     </button>
                 )}
             </div>
 
             {books.length === 0 ? (
                 <div className="empty-state">
-                    <strong>Nothing on this shelf yet</strong>
+                    <strong>Empty shelf</strong>
                     {isOwner
-                        ? "Search below to add your first book."
-                        : "The owner hasn't added any books."}
+                        ? "Add something below."
+                        : "Nothing here yet."}
                 </div>
             ) : (
                 <ul className="book-list">
@@ -241,7 +241,7 @@ export default function CollectionDetail() {
                         <input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search for books..."
+                            placeholder="Title or author"
                         />
                         <button type="submit">Search</button>
                     </form>
@@ -270,7 +270,7 @@ export default function CollectionDetail() {
                                     </Link>
 
                                     {alreadyAdded ? (
-                                        <span>In collection</span>
+                                        <span>On the shelf</span>
                                     ) : (
                                         <button onClick={() => handleAdd(book.id)}>
                                             Add
@@ -285,9 +285,9 @@ export default function CollectionDetail() {
 
             <ConfirmDialog
                 open={confirmingDelete}
-                title="Delete this collection?"
+                title="Delete this shelf?"
                 body={`"${collection.name}" and its ${books.length} ${books.length === 1 ? "book" : "books"} will be removed. This can't be undone.`}
-                confirmLabel="Delete collection"
+                confirmLabel="Delete shelf"
                 busy={deleting}
                 onConfirm={handleDeleteCollection}
                 onCancel={() => !deleting && setConfirmingDelete(false)}

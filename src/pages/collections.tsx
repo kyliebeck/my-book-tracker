@@ -56,7 +56,7 @@ export default function Collections() {
             setError("");
         } catch (err) {
             console.error(err);
-            setError("Could not load collections.");
+            setError("Couldn't load your shelves.");
         } finally {
             setLoading(false);
         }
@@ -100,7 +100,7 @@ export default function Collections() {
             load();
         } catch (err) {
             console.error(err);
-            setError("Could not create collection.");
+            setError("Couldn't make that shelf.");
         }
     }
 
@@ -109,15 +109,15 @@ export default function Collections() {
     if (!user) {
         return (
             <div className="empty-state">
-                <strong>Sign in to see your collections</strong>
-                Your shelves are private to your account.
+                <strong>Sign in to see your shelves</strong>
+                Only you can see them.
             </div>
         );
     }
 
     return (
         <div className="collections-container">
-            <p className="eyebrow">Your Shelves</p>
+            <p className="eyebrow">Yours</p>
             <h1>My Collections</h1>
 
             <form className="collection-form" onSubmit={handleCreate}>
@@ -125,7 +125,7 @@ export default function Collections() {
                     className="collection-input"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="New collection name"
+                    placeholder="Name a new shelf"
                 />
                 <label className="collection-public-toggle">
                     <input
@@ -149,8 +149,7 @@ export default function Collections() {
             {!loading && collections.length === 0 && (
                 <div className="empty-state">
                     <strong>No shelves yet</strong>
-                    Name one above to start collecting — mark it public and it'll
-                    show up on the Community page.
+                    Name one above. Make it public and other people can see it.
                 </div>
             )}
 

@@ -58,7 +58,7 @@ export default function BookDetail() {
             } catch (err) {
                 if (ignore) return;
                 console.error(err);
-                setError("Could not load book.");
+                setError("Couldn't load that book.");
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -91,7 +91,7 @@ export default function BookDetail() {
         );
     }
     if (error) return <p className="error-text">{error}</p>;
-    if (!book) return <p className="empty-state">Book not found.</p>;
+    if (!book) return <p className="empty-state">Can't find that book.</p>;
 
     const cover = coverUrl(book.thumbnail, 3);
 

@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
-const SUFFIX = "Book Tracker";
+const SUFFIX = "Nightstand";
 
 /**
- * Sets the browser tab title per page. Without this every route reads
- * "my-book-tracker", which makes multiple open tabs indistinguishable.
+ * Sets the browser tab title per page, e.g. "Discover · Nightstand". Without
+ * this every route reads the same thing, making open tabs indistinguishable.
  *
  * Pass undefined while data is still loading to leave the title alone rather
  * than flashing "undefined".

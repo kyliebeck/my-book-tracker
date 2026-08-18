@@ -50,7 +50,7 @@ export default function Discover() {
             setBooks(rankByPopularity(results));
         } catch (err) {
             console.error(err);
-            setError("Something went wrong. Try again.");
+            setError("That search didn't work. Try again.");
         } finally {
             setLoading(false);
         }
@@ -88,7 +88,7 @@ export default function Discover() {
         } catch (err) {
             console.error(err);
             setToast({
-                message: "Couldn't add — it may already be in that collection.",
+                message: "It's already on that shelf.",
                 tone: "error",
             });
         }
@@ -104,7 +104,7 @@ export default function Discover() {
                     <input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search by title, author, subject…"
+                        placeholder="Try &quot;Le Guin&quot; or &quot;ghost stories&quot;"
                     />
                     <button type="submit">Search</button>
                 </form>
@@ -133,16 +133,15 @@ export default function Discover() {
 
             {!loading && !searched && (
                 <div className="empty-state">
-                    <strong>Find your next read</strong>
-                    Search by title, author or subject — or pick a genre above to see
-                    what's popular.
+                    <strong>Nothing here yet</strong>
+                    Pick a genre, or search for something you half-remember.
                 </div>
             )}
 
             {!loading && searched && !error && books.length === 0 && (
                 <div className="empty-state">
-                    <strong>Nothing found</strong>
-                    Try a different spelling, a broader term, or one of the genres above.
+                    <strong>No luck</strong>
+                    Try a different spelling, or something broader.
                 </div>
             )}
 

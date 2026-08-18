@@ -356,6 +356,43 @@ textarea:focus {
   }
 }
 
+/* Wordmark. Set in Fraunces with the WONK alternates on, so the brand is drawn
+   from the same type as the display headlines rather than sitting apart. */
+.site-nav .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-right: 14px;
+  font-family: var(--heading);
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: -0.015em;
+  color: var(--text-h);
+  font-variation-settings: 'opsz' 40, 'SOFT' 20, 'WONK' 1;
+
+  @media (max-width: 560px) {
+    font-size: 18px;
+    margin-right: 6px;
+  }
+}
+
+.site-nav .brand:hover {
+  color: var(--accent);
+}
+
+/* Crescent, matching the favicon — drawn with a shadow rather than an image so
+   it inherits the accent colour and needs no extra request. */
+.brand-mark {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset -3.5px 2.5px 0 0 var(--accent);
+  transform: rotate(-18deg);
+  flex: 0 0 auto;
+}
+
 .site-nav a {
   font-size: 13px;
   font-weight: 600;

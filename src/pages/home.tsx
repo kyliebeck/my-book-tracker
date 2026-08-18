@@ -56,21 +56,20 @@ export default function Home() {
     return (
         <div>
             <section className="hero">
-                <p className="eyebrow">Your Library</p>
+                <p className="eyebrow">A reading log</p>
                 <h1>
-                    Every book you've
-                    <em>ever loved.</em>
+                    What's on your
+                    <em>nightstand?</em>
                 </h1>
                 <p className="hero-lede">
-                    Build collections, track what you're reading, and see what the
-                    shelves of other readers look like.
+                    Every reader has a stack by the bed. This one's yours.
                 </p>
                 <div className="hero-actions">
                     <Link className="btn-primary" to="/collections">
-                        Your Collections
+                        Your shelves
                     </Link>
                     <Link className="btn-ghost" to="/discover">
-                        Discover Books
+                        Find books
                     </Link>
                 </div>
             </section>
@@ -83,7 +82,7 @@ export default function Home() {
                     <div className="spotlight-inner">
                         <Cover src={spotlight.cover} title={spotlight.title} eager />
                         <div className="spotlight-body">
-                            <p className="eyebrow">Most read right now</p>
+                            <p className="eyebrow">Everyone's reading</p>
                             <h2 className="spotlight-title">{spotlight.title}</h2>
                             {spotlight.author && (
                                 <p className="spotlight-author">{spotlight.author}</p>

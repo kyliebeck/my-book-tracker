@@ -61,7 +61,7 @@ export default function Toast({ toast, onDismiss, duration = 4000 }: Props) {
                     type="button"
                     className="toast-dismiss"
                     onClick={onDismiss}
-                    aria-label="Dismiss notification"
+                    aria-label="Dismiss"
                 >
                     ×
                 </button>

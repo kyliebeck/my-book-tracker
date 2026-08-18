@@ -47,7 +47,7 @@ export default function Community() {
             } catch (err) {
                 if (ignore) return;
                 console.error(err);
-                setError("Could not load collections.");
+                setError("Couldn't load public shelves.");
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -60,8 +60,8 @@ export default function Community() {
     if (!user) {
         return (
             <div className="empty-state">
-                <strong>Sign in to browse the community</strong>
-                See public shelves built by other readers.
+                <strong>Sign in to look around</strong>
+                See what other people keep on theirs.
             </div>
         );
     }
@@ -80,8 +80,8 @@ export default function Community() {
             {error && <p className="error-text">{error}</p>}
             {!loading && collections.length === 0 && (
                 <div className="empty-state">
-                    <strong>No public shelves yet</strong>
-                    When someone marks a collection public, it'll appear here.
+                    <strong>Nothing public yet</strong>
+                    Make one of your shelves public and it shows up here.
                 </div>
             )}
 

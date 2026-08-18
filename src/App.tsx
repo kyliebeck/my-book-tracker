@@ -16,7 +16,12 @@ export default function App() {
   return (
     <div>
       <nav className="site-nav">
-        <Link to="/">Home</Link>
+        {/* The wordmark is the home link, so a separate "Home" item would be
+            redundant — and the nav already wraps to two lines on a phone. */}
+        <Link className="brand" to="/" aria-label="Nightstand — home">
+          <span className="brand-mark" aria-hidden="true" />
+          Nightstand
+        </Link>
         <Link to="/collections">Collections</Link>
         <Link to="/discover">Discover</Link>
         <Link to="/community">Community</Link>
