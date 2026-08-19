@@ -35,11 +35,15 @@ export async function getFinishedAt(bookId: string): Promise<string | null> {
 export async function markFinished(bookId: string): Promise<void> {
     const userId = await currentUserId();
     if (!userId) throw new Error("Not signed in.");
-    // Upsert so a double-click can't fail on the composite primary key.
+
+    // Plain insert rather than upsert. An upsert is INSERT ... ON CONFLICT DO
+    // UPDATE, which needs UPDATE privileges and an UPDATE policy on the table —
+    // and there is nothing to update, since the row already says what it needs
+    // to. A duplicate just means it was already marked, so treat 23505 as success.
     const { error } = await supabase
         .from("read_books")
-        .upsert({ user_id: userId, book_id: bookId }, { onConflict: "user_id,book_id" });
-    if (error) throw error;
+        .insert({ user_id: userId, book_id: bookId });
+    if (error && error.code !== "23505") throw error;
 }
 
 export async function unmarkFinished(bookId: string): Promise<void> {
