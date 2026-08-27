@@ -23,20 +23,45 @@ const json = (body: unknown, status = 200) =>
     });
 
 /**
+ * Failures here return a generic message, because upstream errors can echo
+ * request content back and that isn't the browser's business. Setting the
+ * DEBUG_ERRORS secret adds the real detail to the response — the CLI has no
+ * `functions logs` subcommand, so this is the way to see what actually broke.
+ * Unset it when you're done: `supabase secrets unset DEBUG_ERRORS`.
+ */
+const debugErrors = Deno.env.get("DEBUG_ERRORS") === "1";
+
+function failure(err: unknown, status = 500) {
+    console.error(err);
+    return json(
+        {
+            error: "Could not generate recommendations",
+            ...(debugErrors
+                ? { detail: err instanceof Error ? `${err.name}: ${err.message}` : String(err) }
+                : {}),
+        },
+        status
+    );
+}
+
+/**
  * The schema is the contract. Passing it as `output_config.format` makes the
  * API constrain generation to this shape, so we never hand-parse a reply or
  * strip markdown fences off it — a malformed response can't reach the UI.
+ *
+ * The count isn't expressed here on purpose: array length constraints don't
+ * survive schema generation (the helper demotes `.length(3)` to a description
+ * string rather than a real constraint), so writing one would only look like
+ * it was enforced. The prompt asks for three, and the UI renders what it gets.
  */
 const Recommendations = z.object({
-    recommendations: z
-        .array(
-            z.object({
-                title: z.string(),
-                author: z.string(),
-                reason: z.string(),
-            })
-        )
-        .length(3),
+    recommendations: z.array(
+        z.object({
+            title: z.string(),
+            author: z.string(),
+            reason: z.string(),
+        })
+    ),
 });
 
 type IncomingBook = { title?: unknown; authors?: unknown };
@@ -53,7 +78,17 @@ function describe(book: IncomingBook): string | null {
     return authors ? `- ${title} by ${authors.slice(0, 200)}` : `- ${title}`;
 }
 
-const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
+/**
+ * An identity-linked API key has to say which workspace it's acting in, or
+ * every request 400s. A plain workspace key doesn't, so the header is only
+ * sent when ANTHROPIC_WORKSPACE_ID is set and both kinds of key work.
+ */
+const workspaceId = Deno.env.get("ANTHROPIC_WORKSPACE_ID");
+
+const client = new Anthropic({
+    apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
+    ...(workspaceId ? { defaultHeaders: { "anthropic-workspace-id": workspaceId } } : {}),
+});
 
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -102,15 +137,11 @@ Recommend 3 books they would likely enjoy next. None of them may already be on t
 
         // parsed_output is null if the model stopped early (e.g. max_tokens).
         if (!response.parsed_output) {
-            console.error("No parsed output", response.stop_reason);
-            return json({ error: "Could not generate recommendations" }, 502);
+            return failure(`No parsed output (stop_reason: ${response.stop_reason})`, 502);
         }
 
         return json({ recommendations: response.parsed_output.recommendations });
     } catch (err) {
-        // Log the detail, return a generic message — upstream errors can carry
-        // request content, and that isn't the browser's business.
-        console.error(err);
-        return json({ error: "Could not generate recommendations" }, 500);
+        return failure(err);
     }
 });
