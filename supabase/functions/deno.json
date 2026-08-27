@@ -1,0 +1,6 @@
+{
+  "lint": { "rules": { "tags": ["recommended"] } },
+  "compilerOptions": {
+    "lib": ["deno.ns", "deno.window", "esnext"]
+  }
+}

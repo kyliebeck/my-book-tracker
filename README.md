@@ -1,3 +1,15 @@
+# Nightstand
+
+A book tracker: shelves, search over Google Books, and a public community feed.
+
+The one piece that isn't front-end code is the "Recommend my next read" button
+on a shelf, which runs through a Supabase Edge Function so the Anthropic API
+key stays server-side — see
+[`supabase/functions/recommend-books`](supabase/functions/recommend-books) for
+its deploy steps.
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

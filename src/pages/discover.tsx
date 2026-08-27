@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { searchBooks, searchByGenre, coverUrl, rankByPopularity } from "../services/googleBooks";
 import Cover from "../components/Cover";
 import Toast, { type ToastState } from "../components/Toast";
@@ -27,14 +27,18 @@ const GENRES = [
 ];
 
 export default function Discover() {
-    const [query, setQuery] = useState("");
+    const [searchParams] = useSearchParams();
+    const fromUrl = searchParams.get("q") ?? "";
+
+    // Seeded from ?q= so the box shows what's being searched on arrival.
+    const [query, setQuery] = useState(fromUrl);
     const [books, setBooks] = useState<Book[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(Boolean(fromUrl));
     const [error, setError] = useState("");
     const [activeGenre, setActiveGenre] = useState<string | null>(null);
     const [toast, setToast] = useState<ToastState>(null);
     /** Distinguishes "haven't searched yet" from "searched, found nothing". */
-    const [searched, setSearched] = useState(false);
+    const [searched, setSearched] = useState(Boolean(fromUrl));
 
     useDocumentTitle(activeGenre ? `${activeGenre} books` : "Discover");
 
@@ -58,6 +62,33 @@ export default function Discover() {
             setLoading(false);
         }
     }
+
+    /**
+     * `/discover?q=...` runs the search on arrival. The shelf recommendations
+     * link here, so a suggested title lands on results you can add straight to
+     * a shelf instead of on an empty search box. `loading` and `searched` are
+     * seeded from the URL above rather than set here, so the first paint
+     * already shows the skeleton instead of flashing the empty state.
+     */
+    useEffect(() => {
+        if (!fromUrl) return;
+        let ignore = false;
+        searchBooks(fromUrl)
+            .then((results) => {
+                if (!ignore) setBooks(rankByPopularity(results));
+            })
+            .catch((err) => {
+                if (ignore) return;
+                console.error(err);
+                setError("That search didn't work. Try again.");
+            })
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [fromUrl]);
 
     async function handleGenreClick(genre: string) {
         setQuery("");

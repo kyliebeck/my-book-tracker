@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // Edge functions are Deno, not browser TS — different globals, different
+  // module resolution. They're linted by `deno lint`, not by this config.
+  globalIgnores(['dist', 'supabase']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

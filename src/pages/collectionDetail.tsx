@@ -15,6 +15,7 @@ import Toast, { type ToastState } from "../components/Toast";
 import { BookGridSkeleton, LoadingAnnouncement } from "../components/Skeleton";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import useFinishedIds from "../hooks/useFinishedIds";
+import Recommendations from "../components/Recommendations";
 import type { Book, Collection } from "../types";
 import '../styles/collections.css';
 
@@ -243,6 +244,12 @@ export default function CollectionDetail() {
                         </li>
                     ))}
                 </ul>
+            )}
+
+            {/* Owner-only, and only once there's something to read taste from —
+                an empty shelf gives the model nothing to work with. */}
+            {isOwner && books.length > 0 && (
+                <Recommendations shelfName={collection.name} books={books} />
             )}
 
             {isOwner && (

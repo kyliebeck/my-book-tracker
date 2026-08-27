@@ -113,3 +113,99 @@
     background: var(--surface);
     max-width: 100%;
 }
+/* ---- "Recommend my next read" ------------------------------------------ */
+
+.recs {
+    margin-top: 44px;
+    padding: 22px 24px 24px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--highlight);
+}
+
+.recs-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.recs-head h2 {
+    margin: 0;
+}
+
+.recs-sub {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: 0.75;
+}
+
+.recs-btn {
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 999px;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.recs-btn:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a120a;
+}
+
+.recs-btn:disabled {
+    opacity: 0.55;
+    cursor: progress;
+}
+
+.rec-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rec-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--bg);
+}
+
+.rec-card h3 {
+    margin: 0;
+    font-family: var(--heading);
+    font-size: 17px;
+    color: var(--text-h);
+}
+
+.rec-author {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.rec-reason {
+    margin: 2px 0 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+}
+
+/* Pushed to the bottom so the links line up across cards of uneven height. */
+.rec-find {
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+}

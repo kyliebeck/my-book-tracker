@@ -14,8 +14,15 @@ dist-ssr
 .env
 
 # Editor directories and files
+# Re-include the directory itself: a global gitignore may exclude `.vscode/`
+# outright, and git won't look inside an excluded directory — so without this
+# the negations below never get a chance to match.
+!.vscode/
 .vscode/*
 !.vscode/extensions.json
+# Not a personal preference: scopes the Deno language server to
+# supabase/functions so edge functions type-check and the React app doesn't.
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
