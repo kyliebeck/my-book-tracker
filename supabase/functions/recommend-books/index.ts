@@ -9,6 +9,7 @@
  */
 import Anthropic from "npm:@anthropic-ai/sdk@0.121.0";
 import { zodOutputFormat } from "npm:@anthropic-ai/sdk@0.121.0/helpers/zod";
+import { createClient } from "npm:@supabase/supabase-js@2.110.3";
 import { z } from "npm:zod@4.4.3";
 
 const cors = {
@@ -90,11 +91,48 @@ const client = new Anthropic({
     ...(workspaceId ? { defaultHeaders: { "anthropic-workspace-id": workspaceId } } : {}),
 });
 
+/**
+ * How many runs one reader gets per UTC day. Raise it with
+ * `supabase secrets set DAILY_RECOMMENDATION_LIMIT=25` — no redeploy needed,
+ * the function reads it on cold start.
+ */
+const rawLimit = Number(Deno.env.get("DAILY_RECOMMENDATION_LIMIT"));
+const dailyLimit = Number.isInteger(rawLimit) && rawLimit > 0 ? rawLimit : 10;
+
+/**
+ * The counter lives in Postgres, not in memory here: edge function instances
+ * are short-lived and there are several of them, so anything in-process would
+ * reset constantly and count each instance separately.
+ *
+ * This client uses the service role key — injected by Supabase, never set by
+ * hand and never leaving this function — because `rec_usage` denies every
+ * client role outright. A reader can't read their own count, and more to the
+ * point can't reset it. See usage-limit.sql.
+ */
+const db = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false, autoRefreshToken: false } }
+);
+
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
     if (req.method !== "POST") return json({ error: "Use POST." }, 405);
 
     try {
+        /**
+         * The gateway's own JWT check passes the bundled anon key, so it only
+         * proves the request came from something holding a public key — which
+         * is everyone. Validating the bearer token against the auth server is
+         * what turns "a request" into "a reader", and a reader is what the
+         * daily cap counts.
+         */
+        const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+        const { data: auth, error: authError } = await db.auth.getUser(token);
+        if (authError || !auth.user) {
+            return json({ error: "Sign in to get recommendations." }, 401);
+        }
+
         const { shelfName, books } = await req.json();
 
         // Cap the list: a 300-book shelf would be a large prompt for no gain,
@@ -108,6 +146,31 @@ Deno.serve(async (req) => {
         if (!bookList) return json({ error: "That shelf has nothing to go on." }, 400);
 
         const shelf = typeof shelfName === "string" ? shelfName.slice(0, 120) : "Untitled";
+
+        /**
+         * Claimed here rather than at the top of the handler, so a request
+         * that was never going to reach the model — an empty shelf, a
+         * malformed body — doesn't cost the reader a run.
+         *
+         * A run that fails after this point still counts. Refunding would mean
+         * deciding which failures happened before Anthropic did any work, and
+         * the expensive failure mode (a response that generated fully and then
+         * wouldn't parse) is exactly the one that already spent the money.
+         */
+        const { data: remaining, error: limitError } = await db.rpc("claim_recommendation", {
+            p_user_id: auth.user.id,
+            p_limit: dailyLimit,
+        });
+        if (limitError) return failure(limitError);
+        if (remaining === -1) {
+            return json(
+                {
+                    error: `That's all ${dailyLimit} recommendations for today. More tomorrow.`,
+                    remaining: 0,
+                },
+                429
+            );
+        }
 
         const response = await client.messages.parse({
             model: "claude-opus-5",
@@ -140,7 +203,7 @@ Recommend 3 books they would likely enjoy next. None of them may already be on t
             return failure(`No parsed output (stop_reason: ${response.stop_reason})`, 502);
         }
 
-        return json({ recommendations: response.parsed_output.recommendations });
+        return json({ recommendations: response.parsed_output.recommendations, remaining });
     } catch (err) {
         return failure(err);
     }
